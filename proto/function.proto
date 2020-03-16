@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package baetyl;
+
+// The function server definition.
+service Function {
+  rpc Invoke(MessageRequest) returns (MessageRequest) {}
+}
+
+// MessageRequest function message
+message MessageRequest {
+  string Name                 = 1;
+  string Method               = 2;
+  string Type                 = 3;
+  bytes  Payload              = 4;
+  map<string,string> Metadata = 5;
+}
