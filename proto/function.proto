@@ -4,7 +4,7 @@ package baetyl;
 
 // The function server definition.
 service Function {
-  rpc Invoke(MessageRequest) returns (MessageRequest) {}
+  rpc Call(MessageRequest) returns (MessageRequest) {}
 }
 
 // MessageRequest function message

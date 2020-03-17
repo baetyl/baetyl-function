@@ -18,11 +18,14 @@ import function_pb2
 import function_pb2_grpc
 import logging
 import logging.handlers
+from urllib import parse
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
-_CONF_PATH = "/etc/baetyl/service.yml"
-_CODE_PATH = "/var/lib/baetyl"
-_SERVER_ADDRESS = "0.0.0.0:50050"
+_CONF_PATH          = "/etc/baetyl/service.yml"
+_CODE_PATH          = "/var/lib/baetyl"
+_SERVER_ADDRESS     = "0.0.0.0:80"
+_HeaderDelim        = "&__header_delim__&"
+_HeaderEquals       = "&__header_equals__&"
 
 
 class mo(function_pb2_grpc.FunctionServicer):
@@ -80,92 +83,65 @@ class mo(function_pb2_grpc.FunctionServicer):
             raise Exception("Type of MessageRequest doesn't support")
 
     def process_http(self, request, context):
-        # TODO: timeout
+        event = parse_http_params(request)
         ctx = {}
         ctx['invokeid'] = request.Metadata['invokeId']
-        ctx['serviceName'] = request.Name
-
-        event = {}
-        event['resource'] = request.Metadata['resource']
-        event['path'] = request.Metadata['path']
-        event['httpMethod'] = request.Metadata['httpMethod']
-        event['headers'] = json.loads(request.Metadata['headers'])
-        event['queryStringParameters'] = json.loads(
-            request.Metadata['queryStringParameters'])
-        event['pathParameters'] = request.Metadata['pathParameters']
-        event['requestContext'] = json.loads('requestContext')
-        event['body'] = request.Payload.decode()
-        event['isBase64Encoded'] = request.Metadata['isBase64Encoded']
+        ctx['functionName'] = request.Name
 
         method = request.Method
         if method == "":
             method = self.functions[0]
-
         if method not in self.functions:
-            body = {
-                "Code": "BadGatewayException",
-                "Cause": "function not found",
-                "Message": "Bad Gateway",
-                "Status": 502,
-                "Type": "Server"
-            }
-            response = {
-                'Metadata': {
-                    'statusCode': 502
-                },
-                'Payload': json.dumps(body)
-            }
-            return response
+            return populate_http_response(404, "no router")
 
         try:
-            msg = self.functions[method](msg, ctx)
+            response = self.functions[method](event, ctx)
         except BaseException as err:
             self.log.error(err, exc_info=True)
-            body = {
-                "Code": "InternalException",
-                "Cause": err,
-                "Message": "Internal Error",
-                "Status": 500,
-                "Type": "Server"
-            }
-            response = {
-                'Metadata': {
-                    'statusCode': 500
-                },
-                'Payload': json.dumps(body)
-            }
-            return response
+            return populate_http_response(500, err)
+        
+        if !(isinstance(response, dict) or isinstance(response, str)):
+            return populate_http_response(502, "function response error")
 
-        # TODO: 先检测是否是 str， 然后检测是否可以序列化
+        if isinstance(response, str):
+            try:
+                response =json.loads(response)
+            except BaseException:
+                return populate_http_response(502, "function response error")
 
-        if 'isBase64Encoded' not in response or 'statusCode' not in response
-        or 'headers' not in response or 'body' not in response:
-            body = {
-                "Code": "InternalException",
-                "Cause": err,
-                "Message": "Internal Error",
-                "Status": 500,
-                "Type": "Server"
-            }
-            response = {
-                'Metadata': {
-                    'statusCode': 500
-                },
-                'Payload': json.dumps(body)
-            }
-            return request
-
-        response = {
-            'Name': request['Name'],
-            'Method': method,
-            'Type': request['Type'],
-            'Payload': bytes(msg['body'], encoding='utf-8'),
-            'Metadata': {
-                "isBase64Encoded": response['isBase64Encoded']
-                "statusCode": response['isBase64Encoded']
-                "headers": response['headers']
-            }
+        message = {
+            'Metadata': {}
         }
+
+        if 'statusCode' not in response or not isinstance(response['statusCode'], int):
+            return populate_http_response(502, "function response error")
+        else:
+            message['Metadata']['statusCode'] = response['statusCode']
+        
+        if 'headers' in response:
+            try:
+                headers = json.loads(response['headers'])
+            except BaseException:
+                return populate_http_response(502, "function response error")
+            items = []
+            for k, v in headers.items():
+                if isinstance(v, str):
+                    return populate_http_response(502, "function response error")
+                items.append(k + _HeaderEquals + v)
+            message['Metadata']['headers'] = _HeaderDelim.join(items)
+
+        if 'isBase64Encoded' in response:
+            if isinstance(response['isBase64Encoded'], bool):
+                message['Metadata']['isBase64Encoded'] = response['isBase64Encoded']
+            else:
+                return populate_http_response(502, "function response error")
+
+        if 'body' in response:
+            if isinstance(response['body'], str):
+                message['Payload'] = bytes(response['body'], encoding = "utf8")
+            else:
+                return populate_http_response(502, "function response error")
+
         return response
 
 
@@ -286,6 +262,63 @@ def get_logger(c):
 
     logger.addHandler(handler)
     return logger
+
+
+def parse_http_params(request):
+    event = {}
+    event['path'] = request.Metadata['path']
+    event['resource'] = event['path']
+    event['httpMethod'] = request.Metadata['httpMethod']
+    event['pathParameters'] = {}
+    event['body'] = request.Payload.decode()
+    event['isBase64Encoded'] = request.Metadata['isBase64Encoded']
+    event['queryStringParameters'] = parse.parse_qs(
+        event['queryStringParameters'])
+    event['headers'] = request.Metadata['headers']
+    headers = {}
+    for header in event['headers'].split(_HeaderDelim):
+        kv = header.split(_HeaderEquals)
+        headers[kv[0]] = kv[1]
+    event['headers'] = headers
+    event['requestContext'] = {
+        "stage": "",
+		"requestId": request.Metadata['invokeId'],
+		"resourcePath": event['resource'],
+		"httpMethod": event['httpMethod'],
+		"apiId": "",
+        "sourceIp": "",
+    }
+    return event
+
+def populate_http_response(code, err, body=None):
+    if code == 502:
+        body = {
+            "Code": "BadGatewayException",
+            "Cause": err,
+            "Message": "Bad Gateway",
+            "Status": 502,
+            "Type": "Server"
+        }
+    elif code == 404:
+        body = {
+            "Code": "NotFountException",
+            "Cause": err,
+            "Message": "Not Found",
+            "Status": 404,
+            "Type": "User"
+        }
+    elif code == 500:
+        body = {
+            "errorMessage": err
+        }
+        
+    response =  {
+        'Metadata': {
+            'statusCode': code
+        },
+        'Payload': json.dumps(body)
+    }
+    return response
 
 
 if __name__ == '__main__':

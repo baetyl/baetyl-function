@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='baetyl',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x0e\x66unction.proto\x12\x06\x62\x61\x65tyl\"\xb6\x01\n\x0eMessageRequest\x12\x0c\n\x04Name\x18\x01 \x01(\t\x12\x0e\n\x06Method\x18\x02 \x01(\t\x12\x0c\n\x04Type\x18\x03 \x01(\t\x12\x0f\n\x07Payload\x18\x04 \x01(\x0c\x12\x36\n\x08Metadata\x18\x05 \x03(\x0b\x32$.baetyl.MessageRequest.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x32\x46\n\x08\x46unction\x12:\n\x06Invoke\x12\x16.baetyl.MessageRequest\x1a\x16.baetyl.MessageRequest\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x0e\x66unction.proto\x12\x06\x62\x61\x65tyl\"\xb6\x01\n\x0eMessageRequest\x12\x0c\n\x04Name\x18\x01 \x01(\t\x12\x0e\n\x06Method\x18\x02 \x01(\t\x12\x0c\n\x04Type\x18\x03 \x01(\t\x12\x0f\n\x07Payload\x18\x04 \x01(\x0c\x12\x36\n\x08Metadata\x18\x05 \x03(\x0b\x32$.baetyl.MessageRequest.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x32\x44\n\x08\x46unction\x12\x38\n\x04\x43\x61ll\x12\x16.baetyl.MessageRequest\x1a\x16.baetyl.MessageRequest\"\x00\x62\x06proto3')
 )
 
 
@@ -151,11 +151,11 @@ _FUNCTION = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   serialized_start=211,
-  serialized_end=281,
+  serialized_end=279,
   methods=[
   _descriptor.MethodDescriptor(
-    name='Invoke',
-    full_name='baetyl.Function.Invoke',
+    name='Call',
+    full_name='baetyl.Function.Call',
     index=0,
     containing_service=None,
     input_type=_MESSAGEREQUEST,

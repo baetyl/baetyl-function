@@ -14,8 +14,8 @@ class FunctionStub(object):
     Args:
       channel: A grpc.Channel.
     """
-    self.Invoke = channel.unary_unary(
-        '/baetyl.Function/Invoke',
+    self.Call = channel.unary_unary(
+        '/baetyl.Function/Call',
         request_serializer=function__pb2.MessageRequest.SerializeToString,
         response_deserializer=function__pb2.MessageRequest.FromString,
         )
@@ -25,7 +25,7 @@ class FunctionServicer(object):
   """The function server definition.
   """
 
-  def Invoke(self, request, context):
+  def Call(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -35,8 +35,8 @@ class FunctionServicer(object):
 
 def add_FunctionServicer_to_server(servicer, server):
   rpc_method_handlers = {
-      'Invoke': grpc.unary_unary_rpc_method_handler(
-          servicer.Invoke,
+      'Call': grpc.unary_unary_rpc_method_handler(
+          servicer.Call,
           request_deserializer=function__pb2.MessageRequest.FromString,
           response_serializer=function__pb2.MessageRequest.SerializeToString,
       ),
