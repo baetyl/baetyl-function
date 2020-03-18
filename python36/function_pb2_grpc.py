@@ -16,8 +16,8 @@ class FunctionStub(object):
     """
     self.Call = channel.unary_unary(
         '/baetyl.Function/Call',
-        request_serializer=function__pb2.MessageRequest.SerializeToString,
-        response_deserializer=function__pb2.MessageRequest.FromString,
+        request_serializer=function__pb2.Message.SerializeToString,
+        response_deserializer=function__pb2.Message.FromString,
         )
 
 
@@ -37,8 +37,8 @@ def add_FunctionServicer_to_server(servicer, server):
   rpc_method_handlers = {
       'Call': grpc.unary_unary_rpc_method_handler(
           servicer.Call,
-          request_deserializer=function__pb2.MessageRequest.FromString,
-          response_serializer=function__pb2.MessageRequest.SerializeToString,
+          request_deserializer=function__pb2.Message.FromString,
+          response_serializer=function__pb2.Message.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

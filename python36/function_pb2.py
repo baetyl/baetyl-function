@@ -20,28 +20,28 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='baetyl',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x0e\x66unction.proto\x12\x06\x62\x61\x65tyl\"\xb6\x01\n\x0eMessageRequest\x12\x0c\n\x04Name\x18\x01 \x01(\t\x12\x0e\n\x06Method\x18\x02 \x01(\t\x12\x0c\n\x04Type\x18\x03 \x01(\t\x12\x0f\n\x07Payload\x18\x04 \x01(\x0c\x12\x36\n\x08Metadata\x18\x05 \x03(\x0b\x32$.baetyl.MessageRequest.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x32\x44\n\x08\x46unction\x12\x38\n\x04\x43\x61ll\x12\x16.baetyl.MessageRequest\x1a\x16.baetyl.MessageRequest\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x0e\x66unction.proto\x12\x06\x62\x61\x65tyl\"\xa8\x01\n\x07Message\x12/\n\x08Metadata\x18\x01 \x03(\x0b\x32\x1d.baetyl.Message.MetadataEntry\x12\x0f\n\x07Payload\x18\x02 \x01(\x0c\x12\x0c\n\x04Name\x18\x03 \x01(\t\x12\x0e\n\x06Method\x18\x04 \x01(\t\x12\x0c\n\x04Type\x18\x05 \x01(\t\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x32\x36\n\x08\x46unction\x12*\n\x04\x43\x61ll\x12\x0f.baetyl.Message\x1a\x0f.baetyl.Message\"\x00\x62\x06proto3')
 )
 
 
 
 
-_MESSAGEREQUEST_METADATAENTRY = _descriptor.Descriptor(
+_MESSAGE_METADATAENTRY = _descriptor.Descriptor(
   name='MetadataEntry',
-  full_name='baetyl.MessageRequest.MetadataEntry',
+  full_name='baetyl.Message.MetadataEntry',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='key', full_name='baetyl.MessageRequest.MetadataEntry.key', index=0,
+      name='key', full_name='baetyl.Message.MetadataEntry.key', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='value', full_name='baetyl.MessageRequest.MetadataEntry.value', index=1,
+      name='value', full_name='baetyl.Message.MetadataEntry.value', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -59,56 +59,56 @@ _MESSAGEREQUEST_METADATAENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=162,
-  serialized_end=209,
+  serialized_start=148,
+  serialized_end=195,
 )
 
-_MESSAGEREQUEST = _descriptor.Descriptor(
-  name='MessageRequest',
-  full_name='baetyl.MessageRequest',
+_MESSAGE = _descriptor.Descriptor(
+  name='Message',
+  full_name='baetyl.Message',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='Name', full_name='baetyl.MessageRequest.Name', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      name='Metadata', full_name='baetyl.Message.Metadata', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='Method', full_name='baetyl.MessageRequest.Method', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      name='Payload', full_name='baetyl.Message.Payload', index=1,
+      number=2, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b(""),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='Type', full_name='baetyl.MessageRequest.Type', index=2,
+      name='Name', full_name='baetyl.Message.Name', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='Payload', full_name='baetyl.MessageRequest.Payload', index=3,
-      number=4, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b(""),
+      name='Method', full_name='baetyl.Message.Method', index=3,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='Metadata', full_name='baetyl.MessageRequest.Metadata', index=4,
-      number=5, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
+      name='Type', full_name='baetyl.Message.Type', index=4,
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
-  nested_types=[_MESSAGEREQUEST_METADATAENTRY, ],
+  nested_types=[_MESSAGE_METADATAENTRY, ],
   enum_types=[
   ],
   serialized_options=None,
@@ -118,31 +118,31 @@ _MESSAGEREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=27,
-  serialized_end=209,
+  serialized_end=195,
 )
 
-_MESSAGEREQUEST_METADATAENTRY.containing_type = _MESSAGEREQUEST
-_MESSAGEREQUEST.fields_by_name['Metadata'].message_type = _MESSAGEREQUEST_METADATAENTRY
-DESCRIPTOR.message_types_by_name['MessageRequest'] = _MESSAGEREQUEST
+_MESSAGE_METADATAENTRY.containing_type = _MESSAGE
+_MESSAGE.fields_by_name['Metadata'].message_type = _MESSAGE_METADATAENTRY
+DESCRIPTOR.message_types_by_name['Message'] = _MESSAGE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
-MessageRequest = _reflection.GeneratedProtocolMessageType('MessageRequest', (_message.Message,), dict(
+Message = _reflection.GeneratedProtocolMessageType('Message', (_message.Message,), dict(
 
   MetadataEntry = _reflection.GeneratedProtocolMessageType('MetadataEntry', (_message.Message,), dict(
-    DESCRIPTOR = _MESSAGEREQUEST_METADATAENTRY,
+    DESCRIPTOR = _MESSAGE_METADATAENTRY,
     __module__ = 'function_pb2'
-    # @@protoc_insertion_point(class_scope:baetyl.MessageRequest.MetadataEntry)
+    # @@protoc_insertion_point(class_scope:baetyl.Message.MetadataEntry)
     ))
   ,
-  DESCRIPTOR = _MESSAGEREQUEST,
+  DESCRIPTOR = _MESSAGE,
   __module__ = 'function_pb2'
-  # @@protoc_insertion_point(class_scope:baetyl.MessageRequest)
+  # @@protoc_insertion_point(class_scope:baetyl.Message)
   ))
-_sym_db.RegisterMessage(MessageRequest)
-_sym_db.RegisterMessage(MessageRequest.MetadataEntry)
+_sym_db.RegisterMessage(Message)
+_sym_db.RegisterMessage(Message.MetadataEntry)
 
 
-_MESSAGEREQUEST_METADATAENTRY._options = None
+_MESSAGE_METADATAENTRY._options = None
 
 _FUNCTION = _descriptor.ServiceDescriptor(
   name='Function',
@@ -150,16 +150,16 @@ _FUNCTION = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=211,
-  serialized_end=279,
+  serialized_start=197,
+  serialized_end=251,
   methods=[
   _descriptor.MethodDescriptor(
     name='Call',
     full_name='baetyl.Function.Call',
     index=0,
     containing_service=None,
-    input_type=_MESSAGEREQUEST,
-    output_type=_MESSAGEREQUEST,
+    input_type=_MESSAGE,
+    output_type=_MESSAGE,
     serialized_options=None,
   ),
 ])

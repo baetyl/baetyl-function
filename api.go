@@ -3,77 +3,134 @@ package main
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"github.com/baetyl/baetyl-function/utils"
+	"net/http"
 	"strings"
-	"time"
 
-	"github.com/baetyl/baetyl-function/common"
 	baetyl "github.com/baetyl/baetyl-function/proto"
+	"github.com/baetyl/baetyl-go/log"
+	"github.com/docker/distribution/uuid"
 	routing "github.com/qiangxue/fasthttp-routing"
-	"google.golang.org/grpc"
+	"github.com/valyala/fasthttp"
 )
 
-type API struct {
-	endpoints             []Endpoint
-	connectionCreatorFn func(address string, recreateIfExists bool) (*grpc.ClientConn, error)
+// Config
+type Config struct {
+	Server ServerConfig `yaml:"server" json:"server"`
 }
 
-// Endpoint is a collection of route information for an Dapr API
+type API struct {
+	log       *log.Logger
+	cfg       *Config
+	manager   Manager
+	endpoints []Endpoint
+}
+
 type Endpoint struct {
 	Methods []string
 	Route   string
 	Handler func(c *routing.Context) error
 }
 
-func NewAPI(m *Manager) *API {
+func NewAPI(cfg Config) (*API, error) {
+	m := NewGRPCManager()
 	api := &API{
-		connectionCreatorFn: m.GetGRPCConnection,
+		log:     log.With(log.Any("main", "api")),
+		cfg:     &cfg,
+		manager: m,
 	}
 	api.endpoints = append(api.endpoints, api.constructFunctionEndpoints()...)
+	api.endpoints = append(api.endpoints, api.constructServiceEndpoints()...)
+
+	handler := api.useRouter()
+	go func() {
+		// TODO: support tls
+		if err := fasthttp.ListenAndServe(cfg.Server.Address, handler); err != nil {
+			panic(err)
+		}
+	}()
+
+	return api, nil
 }
 
+// Close closes api
 func (a *API) Close() {
-	// 需要实现成接口
+	if a.manager != nil {
+		a.manager.Close()
+	}
+}
+
+func (a *API) useRouter() fasthttp.RequestHandler {
+	router := routing.New()
+
+	for _, e := range a.endpoints {
+		methods := strings.Join(e.Methods, ",")
+		router.To(methods, e.Route, e.Handler)
+	}
+
+	return router.HandleRequest
 }
 
 func (a *API) constructFunctionEndpoints() []Endpoint {
 	return []Endpoint{
 		{
-			Methods: []string{common.Get, common.Post, common.Delete, common.Put},
-			Route:   "baetyl-function/<service>/*",
+			Methods: []string{http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodPut},
+			Route:   "/baetyl-function/<service>",
+			Handler: a.onFunctionMessage,
+		},
+		{
+			Methods: []string{http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodPut},
+			Route:   "/baetyl-function/<service>/<method>",
 			Handler: a.onFunctionMessage,
 		},
 	}
 }
 
+func (a *API) constructServiceEndpoints() []Endpoint {
+	return []Endpoint{
+		{
+			Methods: []string{http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodPut},
+			Route:   "/*",
+			Handler: a.onServiceMessage,
+		},
+	}
+}
+
+func (a *API) onServiceMessage(c *routing.Context) error {
+	// TODO: http proxy
+	fmt.Fprintf(c, "Hello World!")
+	return nil
+}
+
 func (a *API) onFunctionMessage(c *routing.Context) error {
 	serviceName := c.Param("service")
-	path := string(c.Path())
-	// TODO: 只有一级
-	method := path[strings.Index(path, serviceName + "/")+7:]
+	method := c.Param("method")
 	body := c.PostBody()
-	verb := strings.ToUpper(string(c.Method()))
-	queryString := string(c.QueryArgs().QueryString())
 
-	metedata := map[string]string{common.HTTPVerb: verb, common.QueryString: queryString}
-	a.setHeaders(c, metedata)
-	message := baetyl.MessageRequest{
-		Name:                 serviceName,
-		Method:               method,
-		Type:                 "HTTP",
-		Payload:              body,
-		Metadata:             metedata,
+	metedata := map[string]string{
+		"path":                  string(c.Request.URI().Path()),
+		"httpMethod":            strings.ToUpper(string(c.Method())),
+		"isBase64Encoded":       "false",
+		"queryStringParameters": string(c.QueryArgs().QueryString()),
+		"invokeId":              uuid.Generate().String(),
+	}
+	utils.SetHeaders(c, metedata)
+	message := baetyl.Message{
+		Name:     serviceName,
+		Method:   method,
+		Type:     "HTTP",
+		Payload:  body,
+		Metadata: metedata,
 	}
 
-	address := "xxx"
-	conn, err := a.connectionCreatorFn(address, false)
+	address := utils.ResolveAddress(serviceName)
+	conn, err := a.manager.GetGRPCConnection(address, false)
 	if err != nil {
 		msg := NewErrorResponse("ERR_FUNCTION_CALL", err.Error())
 		respondWithError(c.RequestCtx, 500, msg)
 	}
 
-	// TODO: 超时时间要设置到配置文件中
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
+	ctx, cancel := context.WithTimeout(context.Background(), a.cfg.Server.Timeout)
 	defer cancel()
 
 	client := baetyl.NewFunctionClient(conn)
@@ -82,52 +139,9 @@ func (a *API) onFunctionMessage(c *routing.Context) error {
 		msg := NewErrorResponse("ERR_FUNCTION_CALL", err.Error())
 		respondWithError(c.RequestCtx, 500, msg)
 	} else {
-		statusCode := GetStatusCodeFromMetadata(resp.Metadata)
-		a.setHeadersOnRequest(resp.Metadata, c)
+		statusCode := utils.GetStatusCodeFromMetadata(resp.Metadata)
+		utils.SetHeadersOnRequest(resp.Metadata, c)
 		respond(c.RequestCtx, statusCode, resp.Payload)
 	}
 	return nil
-}
-
-func (a *API) setHeaders(c *routing.Context, metadata map[string]string) {
-	var headers []string
-	c.RequestCtx.Request.Header.VisitAll(func(key, value []byte) {
-		k := string(key)
-		v := string(value)
-
-		headers = append(headers, fmt.Sprintf("%s&__header_equals__&%s", k, v))
-	})
-	if len(headers) > 0 {
-		metadata["headers"] = strings.Join(headers, "&__header_delim__&")
-	}
-}
-
-type FunctionMessage struct {
-	connectionCreatorFn func(address string, recreateIfExists bool) (*grpc.ClientConn, error) {
-}
-
-func (a *API) setHeadersOnRequest(metadata map[string]string, c *routing.Context) {
-	if metadata == nil {
-		return
-	}
-	if val, ok := metadata["headers"]; ok {
-		headers := strings.Split(val, "&__header_delim__&")
-		for _, h := range headers {
-			kv := strings.Split(h, "&__header_equals__&")
-			c.RequestCtx.Response.Header.Set(kv[0], kv[1])
-		}
-	}
-}
-
-// GetStatusCodeFromMetadata extracts the http status code from the metadata if it exists
-func GetStatusCodeFromMetadata(metadata map[string]string) int {
-	code := metadata[common.HTTPStatusCode]
-	if code != "" {
-		statusCode, err := strconv.Atoi(code)
-		if err == nil {
-			return statusCode
-		}
-	}
-
-	return 200
 }

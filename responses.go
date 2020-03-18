@@ -7,7 +7,6 @@ import (
 
 const (
 	jsonContentTypeHeader = "application/json"
-	etagHeader            = "ETag"
 )
 
 // ErrorResponse is an HTTP response message sent back to calling clients by the Dapr Runtime HTTP API
@@ -38,13 +37,6 @@ func respond(ctx *fasthttp.RequestCtx, code int, obj []byte) {
 	if len(ctx.Response.Header.ContentType()) == 0 {
 		ctx.Response.Header.SetContentType(jsonContentTypeHeader)
 	}
-}
-
-// respondWithETaggedJSON overrides the content-type with application/json and etag header
-func respondWithETaggedJSON(ctx *fasthttp.RequestCtx, code int, obj []byte, etag string) {
-	respond(ctx, code, obj)
-	ctx.Response.Header.SetContentType(jsonContentTypeHeader)
-	ctx.Response.Header.Set(etagHeader, etag)
 }
 
 func respondWithError(ctx *fasthttp.RequestCtx, code int, resp ErrorResponse) {

@@ -4,14 +4,14 @@ package baetyl;
 
 // The function server definition.
 service Function {
-  rpc Call(MessageRequest) returns (MessageRequest) {}
+  rpc Call(Message) returns (Message) {}
 }
 
-// MessageRequest function message
-message MessageRequest {
-  string Name                 = 1;
-  string Method               = 2;
-  string Type                 = 3;
-  bytes  Payload              = 4;
-  map<string,string> Metadata = 5;
+// Message function message
+message Message {
+  map<string,string> Metadata = 1;  // Metadata
+  bytes  Payload              = 2;  // Payload
+  string Name                 = 3;  // service name
+  string Method               = 4;  // method
+  string Type                 = 5;  // type: http or mqtt and etc.
 }
