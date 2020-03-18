@@ -4,9 +4,16 @@
 *.dll
 *.so
 *.dylib
+/.idea
+/**/.DS_Store
+/**/__pycache__/**
 
 # Test binary, build with `go test -c`
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+baetyl-broker
+var/**
+/**/var
