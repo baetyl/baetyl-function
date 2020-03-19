@@ -7,6 +7,7 @@
 /.idea
 /**/.DS_Store
 /**/__pycache__/**
+/**/node_modules
 
 # Test binary, build with `go test -c`
 *.test
@@ -14,6 +15,6 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-baetyl-broker
+baetyl-function
 var/**
 /**/var

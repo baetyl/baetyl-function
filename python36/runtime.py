@@ -28,6 +28,7 @@ class mo(function_pb2_grpc.FunctionServicer):
     """
     grpc server module for python3 runtime
     """
+
     def __init__(self):
         self.name = 'baetyl-function'
         self.conf_path = '/etc/baetyl/service.yml'
@@ -50,14 +51,15 @@ class mo(function_pb2_grpc.FunctionServicer):
         if 'SERVICE_ADDRESS' in os.environ:
             self.server_address = os.environ['SERVICE_ADDRESS']
 
-        self.config = dict()
+        self.config = {
+            'server': {
+                'address': self.server_address
+            }
+        }
+
         if os.path.exists(self.conf_path):
             self.config = yaml.load(
                 open(self.config, 'r').read(), Loader=yaml.FullLoader)
-
-        self.config['server'] = {
-            'address': self.server_address
-        }
 
         self.log = get_logger(self)
         self.functions = get_functions(self.code_path)
@@ -109,17 +111,19 @@ class mo(function_pb2_grpc.FunctionServicer):
             response = self.functions[method](event, ctx)
         except BaseException as err:
             self.log.info("error when executing method %s: %s", method, err)
-            return populate_http_response(500, err)
+            return populate_http_response(500, str(err))
 
         if not isinstance(response, dict) and not isinstance(response, str):
-            self.log.info("function response error: %s", "response is not dict or str")
+            self.log.info("function response error: %s",
+                          "response is not dict or str")
             return populate_http_response(502, "function response error")
 
         if isinstance(response, str):
             try:
                 response = json.loads(response)
             except BaseException as err:
-                self.log.info("function response error in loads response: %s", err)
+                self.log.info(
+                    "function response error in loads response: %s", err)
                 return populate_http_response(502, "function response error")
 
         message = {
@@ -135,16 +139,19 @@ class mo(function_pb2_grpc.FunctionServicer):
 
         if 'headers' in response:
             if not isinstance(response['headers'], dict):
-                self.log.info("function response error: %s", "headers is not dict")
+                self.log.info("function response error: %s",
+                              "headers is not dict")
                 return populate_http_response(502, "function response error")
         else:
             response['headers'] = dict()
 
         if 'isBase64Encoded' in response:
             if isinstance(response['isBase64Encoded'], bool):
-                message['Metadata']['isBase64Encoded'] = str(response['isBase64Encoded'])
+                message['Metadata']['isBase64Encoded'] = str(
+                    response['isBase64Encoded'])
             else:
-                self.log.info("function response error: %s", "isBase64Encoded is not bool")
+                self.log.info("function response error: %s",
+                              "isBase64Encoded is not bool")
                 return populate_http_response(502, "function response error")
 
         if 'body' in response:
@@ -163,14 +170,14 @@ class mo(function_pb2_grpc.FunctionServicer):
             items = []
             for k, v in response['headers'].items():
                 if not isinstance(v, str):
-                    self.log.info("function response error: %s", "value in headers is not str")
+                    self.log.info("function response error: %s",
+                                  "value in headers is not str")
                     return populate_http_response(502, "function response error")
                 items.append(k + _HeaderEquals + v)
-
             message['Metadata']['headers'] = _HeaderDelim.join(items)
 
         return function_pb2.Message(Type='HTTP', Metadata=message['Metadata'],
-                    Payload = message['Payload'])
+                                    Payload=message['Payload'])
 
 
 def get_functions(code_path):
@@ -250,8 +257,8 @@ def get_logger(c):
     """
     get logger
     """
-    logging.basicConfig(level = logging.INFO,
-        format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logger = logging.getLogger(c.name)
     if 'logger' not in c.config:
         return logger
@@ -273,9 +280,9 @@ def get_logger(c):
     if 'age' in c.config['logger'] and 'max' in c.config['logger']['age']:
         interval = c.config['logger']['age']['max']
 
-    backupCount = 15
+    backup_count = 15
     if 'backup' in c.config['logger'] and 'max' in c.config['logger']['backup']:
-        backupCount = c.config['logger']['backup']['max']
+        backup_count = c.config['logger']['backup']['max']
 
     logger.setLevel(level)
 
@@ -284,7 +291,7 @@ def get_logger(c):
         filename=filename,
         when='h',
         interval=interval,
-        backupCount=backupCount)
+        backupCount=backup_count)
     handler.setLevel(level)
 
     formatter = logging.Formatter(
@@ -322,18 +329,16 @@ def parse_http_params(request):
     return event
 
 
-def populate_http_response(code, msg, body=None):
+def populate_http_response(code, msg):
     metadata = {
         'statusCode': str(code)
     }
+    body = {
+        "errorCode": str(code),
+        "message": msg,
+    }
 
-    if not body:
-        body = {
-            "errorCode": str(code),
-            "message": msg,
-        }
-
-    return function_pb2.Message(Type='HTTP', Payload = json.dumps(body).encode('utf-8'), Metadata=metadata)
+    return function_pb2.Message(Type='HTTP', Payload=json.dumps(body).encode('utf-8'), Metadata=metadata)
 
 
 if __name__ == '__main__':
