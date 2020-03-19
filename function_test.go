@@ -37,6 +37,14 @@ func Test_FunctionInstance(t *testing.T) {
 			address:      "127.0.0.1:50040",
 			runFile:      path.Join([]string{"python36", "runtime.py"}...),
 		},
+		{
+			name:         "test node10 runtime",
+			_exec:        "node",
+			functionName: "node10-sayhi",
+			codePath:     path.Join([]string{"testdata", "node10"}...),
+			address:      "127.0.0.1:55402",
+			runFile:      path.Join([]string{"node10", "runtime.js"}...),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -68,54 +76,65 @@ func Test_FunctionInstance(t *testing.T) {
 			assert.NoError(t, err)
 			defer cli.Close()
 
-			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-			defer cancel()
-
 			messages := generateTestCase()
 
-			resp0, err := cli.Call(ctx, &messages[0])
+			ctx0, cancel0 := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel0()
+			resp0, err := cli.Call(ctx0, &messages[0])
 			assert.NoError(t, err)
 			assert.NotEmpty(t, resp0)
 			code0, err0 := strconv.Atoi(resp0.Metadata[common.HTTPStatusCode])
 			assert.NoError(t, err0)
 			assert.Equal(t, code0, http.StatusOK)
 
-			resp1, err1 := cli.Call(ctx, &messages[1])
+			ctx1, cancel1 := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel1()
+			resp1, err1 := cli.Call(ctx1, &messages[1])
 			assert.NoError(t, err1)
 			assert.NotEmpty(t, resp1)
 			code1, err1 := strconv.Atoi(resp1.Metadata[common.HTTPStatusCode])
 			assert.NoError(t, err1)
 			assert.Equal(t, code1, http.StatusBadGateway)
 
-			resp2, err2 := cli.Call(ctx, &messages[2])
+			ctx2, cancel2 := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel2()
+			resp2, err2 := cli.Call(ctx2, &messages[2])
 			assert.NoError(t, err2)
 			assert.NotEmpty(t, resp2)
 			code2, err2 := strconv.Atoi(resp2.Metadata[common.HTTPStatusCode])
 			assert.NoError(t, err2)
 			assert.Equal(t, code2, http.StatusBadGateway)
 
-			resp3, err3 := cli.Call(ctx, &messages[3])
+			ctx3, cancel3 := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel3()
+			resp3, err3 := cli.Call(ctx3, &messages[3])
 			assert.NoError(t, err3)
 			assert.NotEmpty(t, resp3)
 			code3, err3 := strconv.Atoi(resp3.Metadata[common.HTTPStatusCode])
 			assert.NoError(t, err3)
 			assert.Equal(t, code3, http.StatusBadGateway)
 
-			resp4, err4 := cli.Call(ctx, &messages[4])
+			ctx4, cancel4 := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel4()
+			resp4, err4 := cli.Call(ctx4, &messages[4])
 			assert.NoError(t, err4)
 			assert.NotEmpty(t, resp4)
 			code4, err4 := strconv.Atoi(resp4.Metadata[common.HTTPStatusCode])
 			assert.NoError(t, err4)
 			assert.Equal(t, code4, http.StatusBadGateway)
 
-			resp5, err5 := cli.Call(ctx, &messages[5])
+			ctx5, cancel5 := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel5()
+			resp5, err5 := cli.Call(ctx5, &messages[5])
 			assert.NoError(t, err5)
 			assert.NotEmpty(t, resp5)
 			code5, err5 := strconv.Atoi(resp5.Metadata[common.HTTPStatusCode])
 			assert.NoError(t, err5)
 			assert.Equal(t, code5, http.StatusBadGateway)
 
-			resp6, err6 := cli.Call(ctx, &messages[6])
+			ctx6, cancel6 := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel6()
+			resp6, err6 := cli.Call(ctx6, &messages[6])
 			assert.NoError(t, err6)
 			assert.NotEmpty(t, resp6)
 			code6, err6 := strconv.Atoi(resp6.Metadata[common.HTTPStatusCode])
@@ -124,28 +143,36 @@ func Test_FunctionInstance(t *testing.T) {
 			headers := getHeader(resp6.Metadata["headers"])
 			assert.Equal(t, headers["Content-Type"], "text/plain")
 
-			resp7, err7 := cli.Call(ctx, &messages[7])
+			ctx7, cancel7 := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel7()
+			resp7, err7 := cli.Call(ctx7, &messages[7])
 			assert.NoError(t, err7)
 			assert.NotEmpty(t, resp7)
 			code7, err7 := strconv.Atoi(resp7.Metadata[common.HTTPStatusCode])
 			assert.NoError(t, err7)
 			assert.Equal(t, code7, http.StatusOK)
 
-			resp8, err8 := cli.Call(ctx, &messages[8])
+			ctx8, cancel8 := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel8()
+			resp8, err8 := cli.Call(ctx8, &messages[8])
 			assert.NoError(t, err8)
 			assert.NotEmpty(t, resp8)
 			code8, err8 := strconv.Atoi(resp8.Metadata[common.HTTPStatusCode])
 			assert.NoError(t, err8)
 			assert.Equal(t, code8, http.StatusOK)
 
-			resp9, err9 := cli.Call(ctx, &messages[9])
+			ctx9, cancel9 := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel9()
+			resp9, err9 := cli.Call(ctx9, &messages[9])
 			assert.NoError(t, err9)
 			assert.NotEmpty(t, resp9)
 			code9, err9 := strconv.Atoi(resp9.Metadata[common.HTTPStatusCode])
 			assert.NoError(t, err9)
 			assert.Equal(t, code9, http.StatusOK)
 
-			resp10, err10 := cli.Call(ctx, &messages[10])
+			ctx10, cancel10 := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel10()
+			resp10, err10 := cli.Call(ctx10, &messages[10])
 			assert.NoError(t, err10)
 			assert.NotEmpty(t, resp10)
 			code10, err10 := strconv.Atoi(resp8.Metadata[common.HTTPStatusCode])

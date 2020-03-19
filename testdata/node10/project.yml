@@ -1,0 +1,4 @@
+functions:
+  - name: 'node10-project'
+    handler: 'index.handler'
+    codedir: 'project'
