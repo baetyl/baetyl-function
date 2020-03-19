@@ -111,7 +111,7 @@ class mo(function_pb2_grpc.FunctionServicer):
             response = self.functions[method](event, ctx)
         except BaseException as err:
             self.log.info("error when executing method %s: %s", method, err)
-            return populate_http_response(500, err)
+            return populate_http_response(500, str(err))
 
         if not isinstance(response, dict) and not isinstance(response, str):
             self.log.info("function response error: %s",
@@ -280,9 +280,9 @@ def get_logger(c):
     if 'age' in c.config['logger'] and 'max' in c.config['logger']['age']:
         interval = c.config['logger']['age']['max']
 
-    backupCount = 15
+    backup_count = 15
     if 'backup' in c.config['logger'] and 'max' in c.config['logger']['backup']:
-        backupCount = c.config['logger']['backup']['max']
+        backup_count = c.config['logger']['backup']['max']
 
     logger.setLevel(level)
 
@@ -291,7 +291,7 @@ def get_logger(c):
         filename=filename,
         when='h',
         interval=interval,
-        backupCount=backupCount)
+        backupCount=backup_count)
     handler.setLevel(level)
 
     formatter = logging.Formatter(
@@ -329,7 +329,7 @@ def parse_http_params(request):
     return event
 
 
-def populate_http_response(code, msg, body=None):
+def populate_http_response(code, msg):
     metadata = {
         'statusCode': str(code)
     }

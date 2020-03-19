@@ -1,16 +1,14 @@
 #!/usr/bin/env node
 
 exports.handler = (event, context, callback) => {
+    throw new Error('test custom error')
     let obj = {
-        "name": "baetyl",
-        "project": "github"
-    }
-    callback(null, {
         "isBase64Encoded": false,
         "statusCode": 200,
         "headers": {
-            "X-Custom-Header": "headers"
+            "Content-Type": "application/json"
         },
-        "body": JSON.stringify(obj)
-    });
+        "body": 's'
+    }
+    callback(null, JSON.stringify(obj));
 };

@@ -14,15 +14,14 @@ type Manager interface {
 	io.Closer
 }
 
-// Manager is a wrapper around gRPC connection pooling
 type manager struct {
 	log            *log.Logger
 	lock           *sync.Mutex
 	connectionPool map[string]*grpc.ClientConn
 }
 
-// NewGRPCManager returns a new grpc manager
-func NewGRPCManager() Manager {
+// NewGRPCManager
+func NewManager() Manager {
 	return &manager{
 		log:            log.With(log.Any("main", "manager")),
 		lock:           &sync.Mutex{},
