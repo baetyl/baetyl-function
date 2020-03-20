@@ -126,7 +126,7 @@ func (a *API) onFunctionMessage(c *routing.Context) error {
 		"queryStringParameters": string(c.QueryArgs().QueryString()),
 	}
 	SetHeaders(c, metedata)
-	ID, err := strconv.ParseUint(uuid.Generate().String(), 10, 64)
+	ID, _ := strconv.ParseUint(uuid.Generate().String(), 10, 64)
 	message := baetyl.Message{
 		ID:       ID,
 		Payload:  body,
