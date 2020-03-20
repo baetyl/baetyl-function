@@ -15,7 +15,7 @@ class FunctionStub(object):
       channel: A grpc.Channel.
     """
     self.Call = channel.unary_unary(
-        '/baetyl.Function/Call',
+        '/faas.Function/Call',
         request_serializer=function__pb2.Message.SerializeToString,
         response_deserializer=function__pb2.Message.FromString,
         )
@@ -42,5 +42,5 @@ def add_FunctionServicer_to_server(servicer, server):
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
-      'baetyl.Function', rpc_method_handlers)
+      'faas.Function', rpc_method_handlers)
   server.add_generic_rpc_handlers((generic_handler,))

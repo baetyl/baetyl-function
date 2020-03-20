@@ -13,8 +13,7 @@ import (
 	"testing"
 	"time"
 
-	baetyl "github.com/baetyl/baetyl-function/proto"
-	"github.com/docker/distribution/uuid"
+	baetyl "github.com/baetyl/baetyl-go/faas"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 )
@@ -245,273 +244,273 @@ func Test_FunctionInstance(t *testing.T) {
 
 func generateTestCase() []baetyl.Message {
 	metedata0 := map[string]string{
+		"type":                  "HTTP",
+		"name":                  "baetyl-function",
+		"method":                "index",
 		"path":                  "test",
 		"httpMethod":            strings.ToUpper(http.MethodGet),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": "name=baetyl&cxv=cxv",
-		"invokeId":              uuid.Generate().String(),
 	}
 	metedata0["headers"] = generateHeader()
 	message0 := baetyl.Message{
-		Name:     "baetyl-function",
-		Method:   "index",
-		Type:     "HTTP",
+		ID:       12345,
 		Payload:  []byte("baetyl test"),
 		Metadata: metedata0,
 	}
 
 	metedata1 := map[string]string{
+		"type":                  "HTTP",
+		"name":                  "baetyl-function",
+		"method":                "create1",
 		"path":                  "test",
 		"httpMethod":            strings.ToUpper(http.MethodGet),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": "name=baetyl&cxv=cxv",
-		"invokeId":              uuid.Generate().String(),
 	}
 	metedata1["headers"] = generateHeader()
 	message1 := baetyl.Message{
-		Name:     "baetyl-function",
-		Method:   "create1",
-		Type:     "HTTP",
+		ID:       12345,
 		Payload:  []byte("baetyl test"),
 		Metadata: metedata1,
 	}
 
 	metedata2 := map[string]string{
+		"type":                  "HTTP",
+		"name":                  "baetyl-function",
+		"method":                "create2",
 		"path":                  "test",
 		"httpMethod":            strings.ToUpper(http.MethodGet),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": "name=baetyl&cxv=cxv",
-		"invokeId":              uuid.Generate().String(),
 	}
 	metedata2["headers"] = generateHeader()
 	message2 := baetyl.Message{
-		Name:     "baetyl-function",
-		Method:   "create2",
-		Type:     "HTTP",
+		ID:       12345,
 		Payload:  []byte("baetyl test"),
 		Metadata: metedata2,
 	}
 
 	metedata3 := map[string]string{
+		"type":                  "HTTP",
+		"name":                  "baetyl-function",
+		"method":                "create3",
 		"path":                  "test",
 		"httpMethod":            strings.ToUpper(http.MethodGet),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": "name=baetyl&cxv=cxv",
-		"invokeId":              uuid.Generate().String(),
 	}
 	metedata3["headers"] = generateHeader()
 	message3 := baetyl.Message{
-		Name:     "baetyl-function",
-		Method:   "create3",
-		Type:     "HTTP",
+		ID:       12345,
 		Payload:  []byte("baetyl test"),
 		Metadata: metedata3,
 	}
 
 	metedata4 := map[string]string{
+		"type":                  "HTTP",
+		"name":                  "baetyl-function",
+		"method":                "create4",
 		"path":                  "test",
 		"httpMethod":            strings.ToUpper(http.MethodGet),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": "name=baetyl&cxv=cxv",
-		"invokeId":              uuid.Generate().String(),
 	}
 	metedata4["headers"] = generateHeader()
 	message4 := baetyl.Message{
-		Name:     "baetyl-function",
-		Method:   "create4",
-		Type:     "HTTP",
+		ID:       12345,
 		Payload:  []byte("baetyl test"),
 		Metadata: metedata4,
 	}
 
 	metedata5 := map[string]string{
+		"type":                  "HTTP",
+		"name":                  "baetyl-function",
+		"method":                "create5",
 		"path":                  "test",
 		"httpMethod":            strings.ToUpper(http.MethodGet),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": "name=baetyl&cxv=cxv",
-		"invokeId":              uuid.Generate().String(),
 	}
 	metedata5["headers"] = generateHeader()
 	message5 := baetyl.Message{
-		Name:     "baetyl-function",
-		Method:   "create5",
-		Type:     "HTTP",
+		ID:       12345,
 		Payload:  []byte("baetyl test"),
 		Metadata: metedata5,
 	}
 
 	metedata6 := map[string]string{
+		"type":                  "HTTP",
+		"name":                  "baetyl-function",
+		"method":                "create6",
 		"path":                  "test",
 		"httpMethod":            strings.ToUpper(http.MethodGet),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": "name=baetyl&cxv=cxv",
-		"invokeId":              uuid.Generate().String(),
 	}
 	metedata6["headers"] = generateHeader()
 	message6 := baetyl.Message{
-		Name:     "baetyl-function",
-		Method:   "create6",
-		Type:     "HTTP",
+		ID:       12345,
 		Payload:  []byte("baetyl test"),
 		Metadata: metedata6,
 	}
 
 	metedata7 := map[string]string{
+		"type":                  "HTTP",
+		"name":                  "baetyl-function",
+		"method":                "create7",
 		"path":                  "test",
 		"httpMethod":            strings.ToUpper(http.MethodGet),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": "name=baetyl&cxv=cxv",
-		"invokeId":              uuid.Generate().String(),
 	}
 	metedata7["headers"] = generateHeader()
 	message7 := baetyl.Message{
-		Name:     "baetyl-function",
-		Method:   "create7",
-		Type:     "HTTP",
+		ID:       12345,
 		Payload:  []byte("baetyl test"),
 		Metadata: metedata7,
 	}
 
 	metedata8 := map[string]string{
+		"type":                  "HTTP",
+		"name":                  "baetyl-function",
+		"method":                "create8",
 		"path":                  "test",
 		"httpMethod":            strings.ToUpper(http.MethodGet),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": "name=baetyl&cxv=cxv",
-		"invokeId":              uuid.Generate().String(),
 	}
 	metedata8["headers"] = generateHeader()
 	message8 := baetyl.Message{
-		Name:     "baetyl-function",
-		Method:   "create8",
-		Type:     "HTTP",
+		ID:       12345,
 		Payload:  []byte("baetyl test"),
 		Metadata: metedata8,
 	}
 
 	metedata9 := map[string]string{
+		"type":                  "HTTP",
+		"name":                  "baetyl-function",
+		"method":                "create9",
 		"path":                  "test",
 		"httpMethod":            strings.ToUpper(http.MethodGet),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": "name=baetyl&cxv=cxv",
-		"invokeId":              uuid.Generate().String(),
 	}
 	metedata9["headers"] = generateHeader()
 	message9 := baetyl.Message{
-		Name:     "baetyl-function",
-		Method:   "create9",
-		Type:     "HTTP",
+		ID:       12345,
 		Payload:  []byte("baetyl test"),
 		Metadata: metedata9,
 	}
 
 	metedata10 := map[string]string{
+		"type":                  "HTTP",
+		"name":                  "baetyl-function",
+		"method":                "create10",
 		"path":                  "test",
 		"httpMethod":            strings.ToUpper(http.MethodGet),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": "name=baetyl&cxv=cxv",
-		"invokeId":              uuid.Generate().String(),
 	}
 	metedata10["headers"] = generateHeader()
 	message10 := baetyl.Message{
-		Name:     "baetyl-function",
-		Method:   "create10",
-		Type:     "HTTP",
+		ID:       12345,
 		Payload:  []byte("baetyl test"),
 		Metadata: metedata10,
 	}
 
 	metedata11 := map[string]string{
+		"type":                  "HTTP",
+		"name":                  "baetyl-function",
+		"method":                "create11",
 		"path":                  "test",
 		"httpMethod":            strings.ToUpper(http.MethodGet),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": "name=baetyl&cxv=cxv",
-		"invokeId":              uuid.Generate().String(),
 	}
 	metedata11["headers"] = generateHeader()
 	message11 := baetyl.Message{
-		Name:     "baetyl-function",
-		Method:   "create11",
-		Type:     "HTTP",
+		ID:       12345,
 		Payload:  []byte("baetyl test"),
 		Metadata: metedata11,
 	}
 
 	metedata12 := map[string]string{
+		"type":                  "HTTP",
+		"name":                  "baetyl-function",
+		"method":                "create12",
 		"path":                  "test",
 		"httpMethod":            strings.ToUpper(http.MethodGet),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": "name=baetyl&cxv=cxv",
-		"invokeId":              uuid.Generate().String(),
 	}
 	metedata12["headers"] = generateHeader()
 	message12 := baetyl.Message{
-		Name:     "baetyl-function",
-		Method:   "create12",
-		Type:     "HTTP",
+		ID:       12345,
 		Payload:  []byte("baetyl test"),
 		Metadata: metedata12,
 	}
 
 	metedata13 := map[string]string{
+		"type":                  "HTTP",
+		"name":                  "baetyl-function",
+		"method":                "create13",
 		"path":                  "test",
 		"httpMethod":            strings.ToUpper(http.MethodGet),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": "name=baetyl&cxv=cxv",
-		"invokeId":              uuid.Generate().String(),
 	}
 	metedata13["headers"] = generateHeader()
 	message13 := baetyl.Message{
-		Name:     "baetyl-function",
-		Method:   "create13",
-		Type:     "HTTP",
+		ID:       12345,
 		Payload:  []byte("baetyl test"),
 		Metadata: metedata13,
 	}
 
 	metedata14 := map[string]string{
+		"type":                  "HTTP",
+		"name":                  "baetyl-function",
+		"method":                "create14",
 		"path":                  "test",
 		"httpMethod":            strings.ToUpper(http.MethodGet),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": "name=baetyl&cxv=cxv",
-		"invokeId":              uuid.Generate().String(),
 	}
 	metedata14["headers"] = generateHeader()
 	message14 := baetyl.Message{
-		Name:     "baetyl-function",
-		Method:   "create14",
-		Type:     "HTTP",
+		ID:       12345,
 		Payload:  []byte("baetyl test"),
 		Metadata: metedata14,
 	}
 
 	metedata15 := map[string]string{
+		"type":                  "HTTP",
+		"name":                  "baetyl-function",
+		"method":                "create15",
 		"path":                  "test",
 		"httpMethod":            strings.ToUpper(http.MethodGet),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": "name=baetyl&cxv=cxv",
-		"invokeId":              uuid.Generate().String(),
 	}
 	metedata15["headers"] = generateHeader()
 	message15 := baetyl.Message{
-		Name:     "baetyl-function",
-		Method:   "create15",
-		Type:     "HTTP",
+		ID:       12345,
 		Payload:  []byte("baetyl test"),
 		Metadata: metedata15,
 	}
 
 	metedata16 := map[string]string{
+		"type":                  "HTTP",
+		"name":                  "baetyl-function",
+		"method":                "create16",
 		"path":                  "test",
 		"httpMethod":            strings.ToUpper(http.MethodGet),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": "name=baetyl&cxv=cxv",
-		"invokeId":              uuid.Generate().String(),
 	}
 	metedata16["headers"] = generateHeader()
 	message16 := baetyl.Message{
-		Name:     "baetyl-function",
-		Method:   "create16",
-		Type:     "HTTP",
+		ID:       12345,
 		Payload:  []byte("baetyl test"),
 		Metadata: metedata16,
 	}

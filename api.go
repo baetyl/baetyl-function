@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	baetyl "github.com/baetyl/baetyl-function/proto"
+	baetyl "github.com/baetyl/baetyl-go/faas"
 	"github.com/baetyl/baetyl-go/log"
 	"github.com/docker/distribution/uuid"
 	routing "github.com/qiangxue/fasthttp-routing"
@@ -17,10 +17,11 @@ import (
 const (
 	// HTTPStatusCode statusCode
 	HTTPStatusCode = "statusCode"
+
 	// HeaderDelim HeaderDelim
-	HeaderDelim = "&__header_delim__&"
-	// HeaderEquals HeaderEquals
-	HeaderEquals = "&__header_equals__&"
+	HeaderDelim = "$_Delimiter_$"
+	// HeaderEquals
+	HeaderEquals = "$_Equal_$"
 )
 
 // Config
@@ -116,17 +117,18 @@ func (a *API) onFunctionMessage(c *routing.Context) error {
 	body := c.PostBody()
 
 	metedata := map[string]string{
+		"type":                  "HTTP",
+		"name":                  serviceName,
+		"method":                method,
 		"path":                  string(c.Request.URI().Path()),
 		"httpMethod":            strings.ToUpper(string(c.Method())),
 		"isBase64Encoded":       "false",
 		"queryStringParameters": string(c.QueryArgs().QueryString()),
-		"invokeId":              uuid.Generate().String(),
 	}
 	SetHeaders(c, metedata)
+	ID, err := strconv.ParseUint(uuid.Generate().String(), 10, 64)
 	message := baetyl.Message{
-		Name:     serviceName,
-		Method:   method,
-		Type:     "HTTP",
+		ID:       ID,
 		Payload:  body,
 		Metadata: metedata,
 	}

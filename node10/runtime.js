@@ -9,8 +9,8 @@ const yaml = require('yaml');
 const querystring = require('querystring');
 const services = require('./function_grpc_pb.js');
 const messages = require('./function_pb.js');
-const _HeaderDelim = '&__header_delim__&';
-const _HeaderEquals = '&__header_equals__&';
+const _Delim_ = '$_Delimiter_$';
+const _Equal_ = '$_Equal_$';
 
 
 const hasAttr = (obj, attr) => {
@@ -32,10 +32,10 @@ const parseHttpParams = request => {
     event['isBase64Encoded'] = request.getMetadataMap().get('isBase64Encoded');
     event['queryStringParameters'] = querystring.parse(
         request.getMetadataMap().get('queryStringParameters'));
-    event['headers'] = request.getMetadataMap().get('headers').split(_HeaderDelim);
+    event['headers'] = request.getMetadataMap().get('headers').split(_Delim_);
     let headers = {};
     event['headers'].forEach(function(header){
-        let kv = header.split(_HeaderEquals);
+        let kv = header.split(_Equal_);
         headers[kv[0]] = kv[1]
     });
     event['headers'] = headers;
@@ -225,7 +225,7 @@ class NodeRuntimeModule {
         }
     }
     Call(call, callback) {
-        switch (call.request.getType()) {
+        switch (call.request.getMetadataMap().get('type')) {
             case "HTTP":
                 this.processHttp(call, callback);
                 break;
@@ -237,11 +237,11 @@ class NodeRuntimeModule {
         let event = parseHttpParams(call.request);
 
         let ctx = {
-            'invokeid': call.request.getMetadataMap().get('invokeId'),
-            'functionName': call.request.getName()
+            'invokeid': call.request.getId(),
+            'functionName': call.request.getMetadataMap().get('name')
         };
 
-        let method = call.request.getMethod();
+        let method = call.request.getMetadataMap().get('method');
         if (method === "") {
             method = Object.keys(this.functionsHandle)[0]
         }
@@ -330,9 +330,9 @@ class NodeRuntimeModule {
                                     "value in headers is not str");
                                 return populateHttpResponse(callback, 502, "function response error")
                             }
-                            items.push(k + _HeaderEquals + respMsg['headers'][k]);
+                            items.push(k + _Equal_ + respMsg['headers'][k]);
                         }
-                        message.getMetadataMap().set('headers', items.join(_HeaderDelim));
+                        message.getMetadataMap().set('headers', items.join(_Delim_));
                         message.setPayload(Buffer.from(respMsg['body']).toString('base64'));
                     }
                     callback(null, message);

@@ -20,8 +20,8 @@ import logging.handlers
 from urllib import parse
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
-_HeaderDelim = '&__header_delim__&'
-_HeaderEquals = '&__header_equals__&'
+_Delim_ = '$_Delimiter_$'
+_Equal_ = '$_Equal_$'
 
 
 class mo(function_pb2_grpc.FunctionServicer):
@@ -87,7 +87,7 @@ class mo(function_pb2_grpc.FunctionServicer):
         """
         call request
         """
-        if request.Type == 'HTTP':
+        if request.Metadata['type'] == 'HTTP':
             return self.process_http(request, context)
         else:
             raise Exception("Type of Message doesn't support")
@@ -95,11 +95,11 @@ class mo(function_pb2_grpc.FunctionServicer):
     def process_http(self, request, context):
         event = parse_http_params(request)
         ctx = {
-            'invokeid': request.Metadata['invokeId'],
-            'functionName': request.Name
+            'invokeid': request.ID,
+            'functionName': request.Metadata['name']
         }
 
-        method = request.Method
+        method = request.Metadata['method']
         if method == "":
             method = list(self.functions.keys())[0]
 
@@ -173,10 +173,10 @@ class mo(function_pb2_grpc.FunctionServicer):
                     self.log.info("function response error: %s",
                                   "value in headers is not str")
                     return populate_http_response(502, "function response error")
-                items.append(k + _HeaderEquals + v)
-            message['Metadata']['headers'] = _HeaderDelim.join(items)
+                items.append(k + _Equal_ + v)
+            message['Metadata']['headers'] = _Delim_.join(items)
 
-        return function_pb2.Message(Type='HTTP', Metadata=message['Metadata'],
+        return function_pb2.Message(Metadata=message['Metadata'],
                                     Payload=message['Payload'])
 
 
@@ -314,8 +314,8 @@ def parse_http_params(request):
         request.Metadata['queryStringParameters'])
     event['headers'] = request.Metadata['headers']
     headers = dict()
-    for header in event['headers'].split(_HeaderDelim):
-        kv = header.split(_HeaderEquals)
+    for header in event['headers'].split(_Delim_):
+        kv = header.split(_Equal_)
         headers[kv[0]] = kv[1]
     event['headers'] = headers
     event['requestContext'] = {
@@ -338,7 +338,7 @@ def populate_http_response(code, msg):
         "message": msg,
     }
 
-    return function_pb2.Message(Type='HTTP', Payload=json.dumps(body).encode('utf-8'), Metadata=metadata)
+    return function_pb2.Message(Payload=json.dumps(body).encode('utf-8'), Metadata=metadata)
 
 
 if __name__ == '__main__':
