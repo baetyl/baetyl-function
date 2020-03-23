@@ -181,21 +181,20 @@ class NodeRuntimeModule {
         }
     }
     Call(call, callback) {
-        let method = call.request.getMetadataMap().get('method');
-        if (method === "") {
-            method = Object.keys(this.functionsHandle)[0]
+        let functionName = call.request.getMetadataMap().get('functionName');
+        if (functionName === "") {
+            functionName = Object.keys(this.functionsHandle)[0]
         }
 
-        if (!hasAttr(this.functionsHandle, method)) {
-            this.logger.error("method not found: %s", method);
-            return callback(new Error("method not found"));
+        if (!hasAttr(this.functionsHandle, functionName)) {
+            this.logger.error("the function doesn't found: %s", functionName);
+            return callback(new Error("the function doesn't found"));
         }
 
         let ctx = {};
         call.request.getMetadataMap().forEach(function (v, k) {
             ctx[k] = v
         });
-        ctx["id"] = call.request.getId();
 
         let msg = '';
         const Payload = call.request.getPayload();
@@ -209,14 +208,14 @@ class NodeRuntimeModule {
             }
         }
 
-        let functionHandle = this.functionsHandle[method];
+        let functionHandle = this.functionsHandle[functionName];
         try {
             functionHandle(
                 msg,
                 ctx,
                 (err, respMsg) => {
                     if (err != null) {
-                        this.logger.error("error when invoke method " + method + ": " + err.toString());
+                        this.logger.error("error when invoking function %s: %s" , functionName, err.toString());
                         return callback(new Error("[UserCodeInvoke]: " + err.toString()));
                     }
 
@@ -237,7 +236,7 @@ class NodeRuntimeModule {
                     callback(null, call.request);
                 })
         } catch(e) {
-            this.logger.error("error when invoke method " + method + ": " + e.toString());
+            this.logger.error("error when invoking function %s: %s" , functionName, e.toString());
             return callback(new Error("[UserCodeInvoke]: " + e.toString()));
         }
     }

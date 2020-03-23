@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"net/http"
-	"strconv"
 	"strings"
 
 	baetyl "github.com/baetyl/baetyl-go/faas"
@@ -84,7 +83,7 @@ func (a *API) constructFunctionEndpoints() []Endpoint {
 		},
 		{
 			Methods: []string{http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodPut},
-			Route:   "/baetyl-function/<service>/<method>",
+			Route:   "/baetyl-function/<service>/<function>",
 			Handler: a.onFunctionMessage,
 		},
 	}
@@ -107,18 +106,19 @@ func (a *API) onServiceMessage(c *routing.Context) error {
 
 func (a *API) onFunctionMessage(c *routing.Context) error {
 	serviceName := c.Param("service")
-	method := c.Param("method")
+	functionName := c.Param("function")
 	body := c.PostBody()
 
-	ID := uuid.Generate().String()
-	metedata := map[string]string{
-		"functionName": serviceName,
-		"method":       method,
-		"invokeId":     ID,
+	invokeId := string(c.RequestCtx.Request.Header.Peek("invokeid"))
+	if invokeId == "" {
+		invokeId = uuid.Generate().String()
 	}
-	_ID, _ := strconv.ParseUint(uuid.Generate().String(), 10, 64)
+	metedata := map[string]string{
+		"serviceName":  serviceName,
+		"functionName": functionName,
+		"invokeId":     invokeId,
+	}
 	message := baetyl.Message{
-		ID:       _ID,
 		Payload:  body,
 		Metadata: metedata,
 	}

@@ -81,10 +81,10 @@ func Test_FunctionInstance(t *testing.T) {
 			msg := &baetyl.Message{
 				ID: msgID,
 				Metadata: map[string]string{
-					"method":           "index",
+					"functionName":     "index",
 					"messageQOS":       "1",
 					"messageTopic":     "topic-test",
-					"functionName":     "test-functionName",
+					"serviceName":      "test-functionName",
 					"invokeid":         invokeId,
 					"messageTimestamp": msgTimestamp,
 				},
@@ -103,7 +103,7 @@ func Test_FunctionInstance(t *testing.T) {
 			assert.Equal(t, len(dataArr), 7)
 			assert.Equal(t, dataArr["messageQOS"], "1")
 			assert.Equal(t, dataArr["messageTopic"], "topic-test")
-			assert.Equal(t, dataArr["functionName"], "test-functionName")
+			assert.Equal(t, dataArr["functionName"], "index")
 			assert.Equal(t, dataArr["invokeid"], invokeId)
 			assert.Equal(t, dataArr["messageTimestamp"], msgTimestamp)
 			assert.Equal(t, dataArr["name"], "baetyl")
@@ -117,10 +117,10 @@ func Test_FunctionInstance(t *testing.T) {
 			msg2 := &baetyl.Message{
 				ID: msgID2,
 				Metadata: map[string]string{
-					"method":           "index",
+					"functionName":     "index",
 					"messageQOS":       "1",
 					"messageTopic":     "topic-test",
-					"functionName":     "test-functionName",
+					"serviceName":      "test-functionName",
 					"invokeid":         invokeId2,
 					"messageTimestamp": msgTimestamp2,
 				},
@@ -139,7 +139,7 @@ func Test_FunctionInstance(t *testing.T) {
 			assert.Equal(t, len(dataArr2), 7)
 			assert.Equal(t, dataArr2["messageQOS"], "1")
 			assert.Equal(t, dataArr2["messageTopic"], "topic-test")
-			assert.Equal(t, dataArr2["functionName"], "test-functionName")
+			assert.Equal(t, dataArr2["functionName"], "index")
 			assert.Equal(t, dataArr2["invokeid"], invokeId2)
 			assert.Equal(t, dataArr2["messageTimestamp"], msgTimestamp2)
 			assert.Equal(t, dataArr2["bytes"], string(payload2))
@@ -153,10 +153,10 @@ func Test_FunctionInstance(t *testing.T) {
 			msg3 := &baetyl.Message{
 				ID: msgID3,
 				Metadata: map[string]string{
-					"method":           "index",
+					"functionName":     "index",
 					"messageQOS":       "1",
 					"messageTopic":     "topic-test",
-					"functionName":     "test-functionName",
+					"serviceName":      "test-functionName",
 					"invokeid":         invokeId3,
 					"messageTimestamp": msgTimestamp3,
 				},
@@ -183,7 +183,7 @@ func Test_FunctionInstance(t *testing.T) {
 					"method":           "index",
 					"messageQOS":       "1",
 					"messageTopic":     "topic-test",
-					"functionName":     "test-functionName",
+					"functionName":     "index",
 					"invokeid":         invokeId4,
 					"messageTimestamp": msgTimestamp4,
 				},
@@ -203,10 +203,10 @@ func Test_FunctionInstance(t *testing.T) {
 			msg5 := &baetyl.Message{
 				ID: msgID5,
 				Metadata: map[string]string{
-					"method":           "unknown",
+					"functionName":     "unknown",
 					"messageQOS":       "1",
 					"messageTopic":     "topic-test",
-					"functionName":     "test-functionName",
+					"serviceName":      "test-functionName",
 					"invokeid":         invokeId5,
 					"messageTimestamp": msgTimestamp5,
 				},
@@ -226,10 +226,10 @@ func Test_FunctionInstance(t *testing.T) {
 			msg6 := &baetyl.Message{
 				ID: msgID6,
 				Metadata: map[string]string{
-					"method":           "",
+					"functionName":     "",
 					"messageQOS":       "1",
 					"messageTopic":     "topic-test",
-					"functionName":     "test-functionName",
+					"serviceName":      "test-functionName",
 					"invokeid":         invokeId6,
 					"messageTimestamp": msgTimestamp6,
 				},
@@ -248,10 +248,10 @@ func Test_FunctionInstance(t *testing.T) {
 			msg7 := &baetyl.Message{
 				ID: msgID7,
 				Metadata: map[string]string{
-					"method":           "project",
+					"functionName":     "project",
 					"messageQOS":       "1",
 					"messageTopic":     "topic-test",
-					"functionName":     "test-functionName",
+					"servicenName":     "test-functionName",
 					"invokeid":         invokeId7,
 					"messageTimestamp": msgTimestamp7,
 				},
@@ -270,7 +270,7 @@ func Test_FunctionInstance(t *testing.T) {
 			assert.Equal(t, len(dataArr7), 7)
 			assert.Equal(t, dataArr7["messageQOS"], "1")
 			assert.Equal(t, dataArr7["messageTopic"], "topic-test")
-			assert.Equal(t, dataArr7["functionName"], "test-functionName")
+			assert.Equal(t, dataArr7["functionName"], "project")
 			assert.Equal(t, dataArr7["invokeid"], invokeId7)
 			assert.Equal(t, dataArr7["messageTimestamp"], msgTimestamp7)
 			assert.Equal(t, dataArr7["name"], "baetyl")

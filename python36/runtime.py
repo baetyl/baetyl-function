@@ -85,18 +85,17 @@ class mo(function_pb2_grpc.FunctionServicer):
         """
         call request
         """
-        method = request.Metadata['method']
-        if method == "":
-            method = list(self.functions.keys())[0]
+        function = request.Metadata['functionName']
+        if function == "":
+            function = list(self.functions.keys())[0]
 
-        if method not in self.functions:
-            self.log.error("method not found: %s", method)
-            raise Exception('method not found')
+        if function not in self.functions:
+            self.log.error("the function doesn't found: %s", function)
+            raise Exception("the function doesn't found")
 
         ctx = {}
         for k in request.Metadata.keys():
             ctx[k] = request.Metadata[k]
-        ctx["id"] = request.ID
 
         msg = b''
         if request.Payload:
@@ -106,9 +105,9 @@ class mo(function_pb2_grpc.FunctionServicer):
                 msg = request.Payload  # raw data, not json format
 
         try:
-            msg = self.functions[method](msg, ctx)
+            msg = self.functions[function](msg, ctx)
         except BaseException as err:
-            self.log.error("error when invoke method %s: %s", method, err)
+            self.log.error("error when invoking function %s: %s", function, err)
             raise Exception("[UserCodeInvoke] ", err)
 
         if msg is None:
