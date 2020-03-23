@@ -187,7 +187,7 @@ class NodeRuntimeModule {
         }
 
         if (!hasAttr(this.functionsHandle, method)) {
-            this.logger.info("method not found: %s", method);
+            this.logger.error("method not found: %s", method);
             return callback(new Error("method not found"));
         }
 
@@ -195,7 +195,7 @@ class NodeRuntimeModule {
         call.request.getMetadataMap().forEach(function (v, k) {
             ctx[k] = v
         });
-        ctx["ID"] = call.request.getId();
+        ctx["id"] = call.request.getId();
 
         let msg = '';
         const Payload = call.request.getPayload();
@@ -216,7 +216,7 @@ class NodeRuntimeModule {
                 ctx,
                 (err, respMsg) => {
                     if (err != null) {
-                        this.logger.info("error when invoke method " + method + ": " + err.toString());
+                        this.logger.error("error when invoke method " + method + ": " + err.toString());
                         return callback(new Error("[UserCodeInvoke]: " + err.toString()));
                     }
 
@@ -237,7 +237,7 @@ class NodeRuntimeModule {
                     callback(null, call.request);
                 })
         } catch(e) {
-            this.logger.info("error when invoke method " + method + ": " + e.toString());
+            this.logger.error("error when invoke method " + method + ": " + e.toString());
             return callback(new Error("[UserCodeInvoke]: " + e.toString()));
         }
     }

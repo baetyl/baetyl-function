@@ -76,19 +76,19 @@ func Test_FunctionInstance(t *testing.T) {
 			// round 1: test json payload
 			msgID := uint64(1234)
 			msgTimestamp := string(time.Now().Unix())
-			invokeId :=  uuid.Generate().String()
+			invokeId := uuid.Generate().String()
 			payload := []byte(`{"name":"baetyl"}`)
 			msg := &baetyl.Message{
-				ID:       msgID,
+				ID: msgID,
 				Metadata: map[string]string{
-					"method": "index",
-					"messageQOS": "1",
-					"messageTopic": "topic-test",
-					"functionName":"test-functionName",
-					"invokeid": invokeId,
+					"method":           "index",
+					"messageQOS":       "1",
+					"messageTopic":     "topic-test",
+					"functionName":     "test-functionName",
+					"invokeid":         invokeId,
 					"messageTimestamp": msgTimestamp,
 				},
-				Payload:  payload,
+				Payload: payload,
 			}
 
 			ctx1, cancel1 := context.WithTimeout(context.Background(), time.Minute)
@@ -112,19 +112,19 @@ func Test_FunctionInstance(t *testing.T) {
 			// round 2: test binary payload
 			msgID2 := uint64(1234)
 			msgTimestamp2 := strconv.FormatInt(time.Now().Unix(), 10)
-			invokeId2 :=  uuid.Generate().String()
+			invokeId2 := uuid.Generate().String()
 			payload2 := []byte("Baetyl Project")
 			msg2 := &baetyl.Message{
-				ID:       msgID2,
+				ID: msgID2,
 				Metadata: map[string]string{
-					"method": "index",
-					"messageQOS": "1",
-					"messageTopic": "topic-test",
-					"functionName":"test-functionName",
-					"invokeid": invokeId2,
+					"method":           "index",
+					"messageQOS":       "1",
+					"messageTopic":     "topic-test",
+					"functionName":     "test-functionName",
+					"invokeid":         invokeId2,
 					"messageTimestamp": msgTimestamp2,
 				},
-				Payload:  payload2,
+				Payload: payload2,
 			}
 
 			ctx2, cancel2 := context.WithTimeout(context.Background(), time.Minute)
@@ -148,19 +148,19 @@ func Test_FunctionInstance(t *testing.T) {
 			// round 3: test empty payload
 			msgID3 := uint64(1234)
 			msgTimestamp3 := strconv.FormatInt(time.Now().Unix(), 10)
-			invokeId3 :=  uuid.Generate().String()
+			invokeId3 := uuid.Generate().String()
 			payload3 := []byte("")
 			msg3 := &baetyl.Message{
-				ID:       msgID3,
+				ID: msgID3,
 				Metadata: map[string]string{
-					"method": "index",
-					"messageQOS": "1",
-					"messageTopic": "topic-test",
-					"functionName":"test-functionName",
-					"invokeid": invokeId3,
+					"method":           "index",
+					"messageQOS":       "1",
+					"messageTopic":     "topic-test",
+					"functionName":     "test-functionName",
+					"invokeid":         invokeId3,
 					"messageTimestamp": msgTimestamp3,
 				},
-				Payload:  payload3,
+				Payload: payload3,
 			}
 
 			ctx3, cancel3 := context.WithTimeout(context.Background(), time.Minute)
@@ -175,19 +175,19 @@ func Test_FunctionInstance(t *testing.T) {
 			// round 4: test error
 			msgID4 := uint64(1234)
 			msgTimestamp4 := strconv.FormatInt(time.Now().Unix(), 10)
-			invokeId4 :=  uuid.Generate().String()
+			invokeId4 := uuid.Generate().String()
 			payload4 := []byte(`{"err":"Baetyl"}`)
 			msg4 := &baetyl.Message{
-				ID:       msgID4,
+				ID: msgID4,
 				Metadata: map[string]string{
-					"method": "index",
-					"messageQOS": "1",
-					"messageTopic": "topic-test",
-					"functionName":"test-functionName",
-					"invokeid": invokeId4,
+					"method":           "index",
+					"messageQOS":       "1",
+					"messageTopic":     "topic-test",
+					"functionName":     "test-functionName",
+					"invokeid":         invokeId4,
 					"messageTimestamp": msgTimestamp4,
 				},
-				Payload:  payload4,
+				Payload: payload4,
 			}
 
 			ctx4, cancel4 := context.WithTimeout(context.Background(), time.Minute)
@@ -198,19 +198,19 @@ func Test_FunctionInstance(t *testing.T) {
 			// round 5: test function doesn't exist
 			msgID5 := uint64(1234)
 			msgTimestamp5 := strconv.FormatInt(time.Now().Unix(), 10)
-			invokeId5 :=  uuid.Generate().String()
+			invokeId5 := uuid.Generate().String()
 			payload5 := []byte(`{"err":"Baetyl"}`)
 			msg5 := &baetyl.Message{
-				ID:       msgID5,
+				ID: msgID5,
 				Metadata: map[string]string{
-					"method": "unknown",
-					"messageQOS": "1",
-					"messageTopic": "topic-test",
-					"functionName":"test-functionName",
-					"invokeid": invokeId5,
+					"method":           "unknown",
+					"messageQOS":       "1",
+					"messageTopic":     "topic-test",
+					"functionName":     "test-functionName",
+					"invokeid":         invokeId5,
 					"messageTimestamp": msgTimestamp5,
 				},
-				Payload:  payload5,
+				Payload: payload5,
 			}
 
 			ctx5, cancel5 := context.WithTimeout(context.Background(), time.Minute)
@@ -221,19 +221,19 @@ func Test_FunctionInstance(t *testing.T) {
 			// round 5: test method is null
 			msgID6 := uint64(1234)
 			msgTimestamp6 := strconv.FormatInt(time.Now().Unix(), 10)
-			invokeId6 :=  uuid.Generate().String()
+			invokeId6 := uuid.Generate().String()
 			payload6 := []byte("Hello Baetyl")
 			msg6 := &baetyl.Message{
-				ID:       msgID6,
+				ID: msgID6,
 				Metadata: map[string]string{
-					"method": "",
-					"messageQOS": "1",
-					"messageTopic": "topic-test",
-					"functionName":"test-functionName",
-					"invokeid": invokeId6,
+					"method":           "",
+					"messageQOS":       "1",
+					"messageTopic":     "topic-test",
+					"functionName":     "test-functionName",
+					"invokeid":         invokeId6,
 					"messageTimestamp": msgTimestamp6,
 				},
-				Payload:  payload6,
+				Payload: payload6,
 			}
 
 			ctx6, cancel6 := context.WithTimeout(context.Background(), time.Minute)
@@ -243,19 +243,19 @@ func Test_FunctionInstance(t *testing.T) {
 
 			msgID7 := uint64(1234)
 			msgTimestamp7 := string(time.Now().Unix())
-			invokeId7 :=  uuid.Generate().String()
+			invokeId7 := uuid.Generate().String()
 			payload7 := []byte(`{"name":"baetyl"}`)
 			msg7 := &baetyl.Message{
-				ID:       msgID7,
+				ID: msgID7,
 				Metadata: map[string]string{
-					"method": "project",
-					"messageQOS": "1",
-					"messageTopic": "topic-test",
-					"functionName":"test-functionName",
-					"invokeid": invokeId7,
+					"method":           "project",
+					"messageQOS":       "1",
+					"messageTopic":     "topic-test",
+					"functionName":     "test-functionName",
+					"invokeid":         invokeId7,
 					"messageTimestamp": msgTimestamp7,
 				},
-				Payload:  payload7,
+				Payload: payload7,
 			}
 
 			ctx7, cancel7 := context.WithTimeout(context.Background(), time.Minute)
