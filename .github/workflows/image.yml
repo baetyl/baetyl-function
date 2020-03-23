@@ -6,6 +6,8 @@ jobs:
     name: docker build images of runtime
     runs-on: ubuntu-latest
     steps:
+      - name: Install deps
+        run: sudo apt update -y && sudo apt install -y qemu qemu-user-static
       - name: Install Docker CE for buildx
         run: |
           sudo apt update
