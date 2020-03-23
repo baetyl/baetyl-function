@@ -1,0 +1,4 @@
+FROM --platform=$TARGETPLATFORM python:3.6.10-slim-buster
+COPY *.txt /bin/
+RUN cd /bin/ && pip install -r requirements.txt
+ENTRYPOINT ["runtime.py"]

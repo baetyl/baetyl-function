@@ -1,4 +1,4 @@
-FROM --platform=$TARGETPLATFORM python:3-slim-buster
-COPY *.py *.txt /bin/
-RUN cd /bin/ && chmod +x runtime.py && pip install -r requirements.txt
+FROM --platform=$TARGETPLATFORM baetyltechtest/python:3.6-devel
+COPY *.py /bin/
+RUN cd /bin/ && chmod +x runtime.py
 ENTRYPOINT ["runtime.py"]
