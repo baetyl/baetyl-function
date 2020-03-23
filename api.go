@@ -2,12 +2,10 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
-	baetyl "github.com/baetyl/baetyl-function/proto"
+	baetyl "github.com/baetyl/baetyl-go/faas"
 	"github.com/baetyl/baetyl-go/log"
 	"github.com/docker/distribution/uuid"
 	routing "github.com/qiangxue/fasthttp-routing"
@@ -17,10 +15,6 @@ import (
 const (
 	// HTTPStatusCode statusCode
 	HTTPStatusCode = "statusCode"
-	// HeaderDelim HeaderDelim
-	HeaderDelim = "&__header_delim__&"
-	// HeaderEquals HeaderEquals
-	HeaderEquals = "&__header_equals__&"
 )
 
 // Config
@@ -89,7 +83,7 @@ func (a *API) constructFunctionEndpoints() []Endpoint {
 		},
 		{
 			Methods: []string{http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodPut},
-			Route:   "/baetyl-function/<service>/<method>",
+			Route:   "/baetyl-function/<service>/<function>",
 			Handler: a.onFunctionMessage,
 		},
 	}
@@ -112,21 +106,19 @@ func (a *API) onServiceMessage(c *routing.Context) error {
 
 func (a *API) onFunctionMessage(c *routing.Context) error {
 	serviceName := c.Param("service")
-	method := c.Param("method")
+	functionName := c.Param("function")
 	body := c.PostBody()
 
-	metedata := map[string]string{
-		"path":                  string(c.Request.URI().Path()),
-		"httpMethod":            strings.ToUpper(string(c.Method())),
-		"isBase64Encoded":       "false",
-		"queryStringParameters": string(c.QueryArgs().QueryString()),
-		"invokeId":              uuid.Generate().String(),
+	invokeId := string(c.RequestCtx.Request.Header.Peek("invokeid"))
+	if invokeId == "" {
+		invokeId = uuid.Generate().String()
 	}
-	SetHeaders(c, metedata)
+	metedata := map[string]string{
+		"serviceName":  serviceName,
+		"functionName": functionName,
+		"invokeId":     invokeId,
+	}
 	message := baetyl.Message{
-		Name:     serviceName,
-		Method:   method,
-		Type:     "HTTP",
 		Payload:  body,
 		Metadata: metedata,
 	}
@@ -146,54 +138,12 @@ func (a *API) onFunctionMessage(c *routing.Context) error {
 	if err != nil {
 		msg := NewErrorResponse("ERR_FUNCTION_CALL", err.Error())
 		respondWithError(c.RequestCtx, 500, msg)
-	} else {
-		statusCode := GetStatusCodeFromMetadata(resp.Metadata)
-		SetHeadersOnRequest(resp.Metadata, c)
-		respond(c.RequestCtx, statusCode, resp.Payload)
 	}
+	respond(c.RequestCtx, http.StatusOK, resp.Payload)
 	return nil
 }
 
 func ResolveAddress(serviceName string) string {
 	// TODO: using serviceName to get ip:port
 	return "0.0.0.0:50080"
-}
-
-func SetHeaders(c *routing.Context, metadata map[string]string) {
-	var headers []string
-	c.RequestCtx.Request.Header.VisitAll(func(key, value []byte) {
-		k := string(key)
-		v := string(value)
-
-		headers = append(headers, fmt.Sprintf("%s%s%s", k, HeaderEquals, v))
-	})
-	if len(headers) > 0 {
-		metadata["headers"] = strings.Join(headers, HeaderDelim)
-	}
-}
-
-func SetHeadersOnRequest(metadata map[string]string, c *routing.Context) {
-	if metadata == nil {
-		return
-	}
-	if val, ok := metadata["headers"]; ok {
-		headers := strings.Split(val, HeaderDelim)
-		for _, h := range headers {
-			kv := strings.Split(h, HeaderEquals)
-			c.RequestCtx.Response.Header.Set(kv[0], kv[1])
-		}
-	}
-}
-
-// GetStatusCodeFromMetadata extracts the http status code from the metadata if it exists
-func GetStatusCodeFromMetadata(metadata map[string]string) int {
-	code := metadata[HTTPStatusCode]
-	if code != "" {
-		statusCode, err := strconv.Atoi(code)
-		if err == nil {
-			return statusCode
-		}
-	}
-
-	return http.StatusOK
 }

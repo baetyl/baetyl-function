@@ -27,5 +27,5 @@ def handler(event, context):
     if 'invokeid' in context:
         res['invokeid'] = context['invokeid']
 
-    res['Say'] = 'Hello Baetyl'
+    res['Say'] = 'Hello Python36'
     return res

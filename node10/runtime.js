@@ -6,11 +6,7 @@ const log4js = require('log4js');
 const moment = require('moment');
 const grpc = require('grpc');
 const yaml = require('yaml');
-const querystring = require('querystring');
 const services = require('./function_grpc_pb.js');
-const messages = require('./function_pb.js');
-const _HeaderDelim = '&__header_delim__&';
-const _HeaderEquals = '&__header_equals__&';
 
 
 const hasAttr = (obj, attr) => {
@@ -20,46 +16,6 @@ const hasAttr = (obj, attr) => {
         }
     }
     return false;
-};
-
-const parseHttpParams = request => {
-    let event = {};
-    event['path'] = request.getMetadataMap().get('path');
-    event['resource'] = event['path'];
-    event['httpMethod'] = request.getMetadataMap().get('httpMethod');
-    event['pathParameters'] = {};
-    event['body'] = request.getPayload();
-    event['isBase64Encoded'] = request.getMetadataMap().get('isBase64Encoded');
-    event['queryStringParameters'] = querystring.parse(
-        request.getMetadataMap().get('queryStringParameters'));
-    event['headers'] = request.getMetadataMap().get('headers').split(_HeaderDelim);
-    let headers = {};
-    event['headers'].forEach(function(header){
-        let kv = header.split(_HeaderEquals);
-        headers[kv[0]] = kv[1]
-    });
-    event['headers'] = headers;
-    event['requestContext'] = {
-        "stage": "",
-        "requestId": request.getMetadataMap().get('invokeId'),
-        "resourcePath": event['resource'],
-        "httpMethod": event['httpMethod'],
-        "apiId": "",
-        "sourceIp": "",
-    };
-    return event
-};
-
-const populateHttpResponse = (callback, code, msg) => {
-    let message = new messages.Message();
-    message.getMetadataMap().set('statusCode', code.toString());
-
-    let payload = {
-        "errorCode": code.toString(),
-        "message": msg,
-    };
-    message.setPayload(Buffer.from(JSON.stringify(payload)).toString('base64'));
-    return callback(null, message)
 };
 
 const getLogger = mo => {
@@ -225,120 +181,63 @@ class NodeRuntimeModule {
         }
     }
     Call(call, callback) {
-        switch (call.request.getType()) {
-            case "HTTP":
-                this.processHttp(call, callback);
-                break;
-            default:
-                callback(new Error("Type of Message doesn't support"), null)
-        }
-    }
-    processHttp(call, callback) {
-        let event = parseHttpParams(call.request);
-
-        let ctx = {
-            'invokeid': call.request.getMetadataMap().get('invokeId'),
-            'functionName': call.request.getName()
-        };
-
-        let method = call.request.getMethod();
-        if (method === "") {
-            method = Object.keys(this.functionsHandle)[0]
+        let functionName = call.request.getMetadataMap().get('functionName');
+        if (functionName === "") {
+            functionName = Object.keys(this.functionsHandle)[0]
         }
 
-        if (!hasAttr(this.functionsHandle, method)) {
-            this.logger.info("no route to method: %s", method);
-            return populateHttpResponse(callback, 404, 'no route');
+        if (!hasAttr(this.functionsHandle, functionName)) {
+            this.logger.error("the function doesn't found: %s", functionName);
+            return callback(new Error("the function doesn't found"));
         }
 
-        let functionHandle = this.functionsHandle[method];
+        let ctx = {};
+        call.request.getMetadataMap().forEach(function (v, k) {
+            ctx[k] = v
+        });
+
+        let msg = '';
+        const Payload = call.request.getPayload();
+        if (Payload) {
+            try {
+                const payloadString = Buffer.from(Payload).toString();
+                msg = JSON.parse(payloadString);
+            }
+            catch (error) {
+                msg = Buffer.from(Payload); // raw data, not json format
+            }
+        }
+
+        let functionHandle = this.functionsHandle[functionName];
         try {
             functionHandle(
-                event,
+                msg,
                 ctx,
                 (err, respMsg) => {
                     if (err != null) {
-                        this.logger.info("error when executing method %s: %s", method, err);
-                        return populateHttpResponse(callback, 500, err);
+                        this.logger.error("error when invoking function %s: %s" , functionName, err.toString());
+                        return callback(new Error("[UserCodeInvoke]: " + err.toString()));
                     }
 
-                    let type = typeof(respMsg);
-                    if (!(type === 'object' || type === 'string')) {
-                        this.logger.info("function response error: %s",
-                            "response is not object or string");
-                        return populateHttpResponse(callback, 502, "function response error")
+                    if (respMsg === "" || respMsg === undefined) {
+                        call.request.setPayload("");
+                    } else if (Buffer.isBuffer(respMsg)) {
+                        call.request.setPayload(respMsg);
                     }
-
-                    if (type === 'string') {
+                    else {
                         try {
-                            respMsg = JSON.parse(respMsg)
-                        } catch(ex) {
-                            this.logger.info(
-                                "function response error in loads response: %s", ex);
-                            return populateHttpResponse(callback, 502, "function response error")
+                            const jsonString = JSON.stringify(respMsg);
+                            call.request.setPayload(Buffer.from(jsonString));
+                        }
+                        catch (error) {
+                            return callback(new Error("[UserCodeReturn]: " + error.toString()));
                         }
                     }
-
-                    let message = new messages.Message();
-
-                    if (!hasAttr(respMsg, 'statusCode') || typeof(respMsg['statusCode']) != 'number') {
-                        this.logger.info("function response error: %s", "missing statusCode");
-                        return populateHttpResponse(callback, 502, "function response error")
-                    }else{
-                        message.getMetadataMap().set('statusCode', respMsg['statusCode'].toString())
-                    }
-
-                    if (hasAttr(respMsg, 'headers')) {
-                        if (typeof(respMsg['headers']) != 'object') {
-                            this.logger.info("function response error: %s",
-                                "headers is not dict");
-                            return populateHttpResponse(callback, 502, "function response error")
-                        }
-                    } else{
-                        respMsg['headers'] = {}
-                    }
-
-                    if (hasAttr(respMsg, 'isBase64Encoded')) {
-                        if (typeof(respMsg['isBase64Encoded']) === "boolean") {
-                            message.getMetadataMap().set('isBase64Encoded', respMsg['isBase64Encoded'].toString())
-                        } else {
-                            this.logger.info("function response error: %s",
-                                "isBase64Encoded is not bool");
-                            return populateHttpResponse(callback, 502, 'function response error')
-                        }
-                    }
-
-                    if (hasAttr(respMsg, 'body')) {
-                        if(typeof(respMsg['body']) == 'string'){
-                            message.setPayload(Buffer.from(respMsg['body']).toString('base64'))
-                        } else {
-                            this.logger.info("function response error: %s", "body is not str");
-                            return populateHttpResponse(callback, 502, "function response error")
-                        }
-
-                        try {
-                            JSON.parse(respMsg['body']);
-                            respMsg['headers']['Content-Type'] = 'application/json'
-                        } catch(ex) {
-                            respMsg['headers']['Content-Type'] = 'text/plain'
-                        }
-
-                        let items = [];
-                        for (let k in respMsg['headers']) {
-                            if (typeof(respMsg['headers'][k]) != 'string') {
-                                this.logger.info("function response error: %s",
-                                    "value in headers is not str");
-                                return populateHttpResponse(callback, 502, "function response error")
-                            }
-                            items.push(k + _HeaderEquals + respMsg['headers'][k]);
-                        }
-                        message.getMetadataMap().set('headers', items.join(_HeaderDelim));
-                        message.setPayload(Buffer.from(respMsg['body']).toString('base64'));
-                    }
-                    callback(null, message);
+                    callback(null, call.request);
                 })
         } catch(e) {
-            populateHttpResponse(callback, 500, e.toString())
+            this.logger.error("error when invoking function %s: %s" , functionName, e.toString());
+            return callback(new Error("[UserCodeInvoke]: " + e.toString()));
         }
     }
 }
