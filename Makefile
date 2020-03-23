@@ -2,6 +2,8 @@ MODULE:=baetyl-function
 SRC_FILES:=$(shell find . -type f -name '*.go')
 PLATFORM_ALL:=darwin/amd64 linux/amd64 linux/arm64 linux/386 linux/arm/v7
 
+export DOCKER_CLI_EXPERIMENTAL=enabled
+
 GIT_TAG:=$(shell git tag --contains HEAD)
 GIT_REV:=git-$(shell git rev-parse --short HEAD)
 VERSION:=$(if $(GIT_TAG),$(GIT_TAG),$(GIT_REV))
@@ -31,17 +33,17 @@ all: $(SRC_FILES)
 	@echo "BUILD $(MODULE)"
 	@env CGO_ENABLED=1 go build -o $(MODULE) $(GO_FLAGS) .
 
-.PHONY: build-static
-build-static: $(SRC_FILES)
-	@echo "BUILD $(MODULE)"
-	@env GO111MODULE=on GOPROXY=https://goproxy.cn CGO_ENABLED=1 go build -o $(MODULE) $(GO_FLAGS_STATIC) .
-
 .PHONY: image
 image:
 	@echo "BUILDX: $(REGISTRY)$(MODULE):$(VERSION)"
 	@-docker buildx create --name baetyl
 	@docker buildx use baetyl
 	docker buildx build $(XFLAGS) --platform $(XPLATFORMS) -t $(REGISTRY)$(MODULE):$(VERSION) -f Dockerfile .
+
+.PHONY: runtime-image
+runtime-image:
+	make -C node10 image
+	make -C python36 image
 
 .PHONY: test
 test: fmt
