@@ -20,8 +20,6 @@ import logging.handlers
 from urllib import parse
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
-_Delim_ = '$_Delimiter_$'
-_Equal_ = '$_Equal_$'
 
 
 class mo(function_pb2_grpc.FunctionServicer):
@@ -87,97 +85,43 @@ class mo(function_pb2_grpc.FunctionServicer):
         """
         call request
         """
-        if request.Metadata['type'] == 'HTTP':
-            return self.process_http(request, context)
-        else:
-            raise Exception("Type of Message doesn't support")
-
-    def process_http(self, request, context):
-        event = parse_http_params(request)
-        ctx = {
-            'invokeid': request.ID,
-            'functionName': request.Metadata['name']
-        }
-
         method = request.Metadata['method']
         if method == "":
             method = list(self.functions.keys())[0]
 
         if method not in self.functions:
-            self.log.info("no route to method: %s", method)
-            return populate_http_response(404, "no router")
+            self.log.info("method not found: %s", method)
+            raise Exception('method not found')
+
+        ctx = {}
+        for k in request.Metadata.keys():
+            ctx[k] = request.Metadata[k]
+        ctx["ID"] = request.ID
+
+        msg = b''
+        if request.Payload:
+            try:
+                msg = json.loads(request.Payload)
+            except BaseException:
+                msg = request.Payload  # raw data, not json format
 
         try:
-            response = self.functions[method](event, ctx)
+            msg = self.functions[method](msg, ctx)
         except BaseException as err:
-            self.log.info("error when executing method %s: %s", method, err)
-            return populate_http_response(500, str(err))
+            self.log.info("error when invoke method %s: %s", method, err)
+            raise Exception("[UserCodeInvoke] ", err)
 
-        if not isinstance(response, dict) and not isinstance(response, str):
-            self.log.info("function response error: %s",
-                          "response is not dict or str")
-            return populate_http_response(502, "function response error")
-
-        if isinstance(response, str):
+        if msg is None:
+            request.Payload = b''
+        elif isinstance(msg, bytes):
+            request.Payload = msg
+        else:
             try:
-                response = json.loads(response)
+                request.Payload = json.dumps(msg).encode('utf-8')
             except BaseException as err:
-                self.log.info(
-                    "function response error in loads response: %s", err)
-                return populate_http_response(502, "function response error")
-
-        message = {
-            'Metadata': dict(),
-            'Payload': b''
-        }
-
-        if 'statusCode' not in response or not isinstance(response['statusCode'], int):
-            self.log.info("function response error: %s", "missing statusCode")
-            return populate_http_response(502, "function response error")
-        else:
-            message['Metadata']['statusCode'] = str(response['statusCode'])
-
-        if 'headers' in response:
-            if not isinstance(response['headers'], dict):
-                self.log.info("function response error: %s",
-                              "headers is not dict")
-                return populate_http_response(502, "function response error")
-        else:
-            response['headers'] = dict()
-
-        if 'isBase64Encoded' in response:
-            if isinstance(response['isBase64Encoded'], bool):
-                message['Metadata']['isBase64Encoded'] = str(
-                    response['isBase64Encoded'])
-            else:
-                self.log.info("function response error: %s",
-                              "isBase64Encoded is not bool")
-                return populate_http_response(502, "function response error")
-
-        if 'body' in response:
-            if isinstance(response['body'], str):
-                message['Payload'] = bytes(response['body'], encoding="utf8")
-            else:
-                self.log.info("function response error: %s", "body is not str")
-                return populate_http_response(502, "function response error")
-
-            try:
-                json.loads(response['body'])
-                response['headers']['Content-Type'] = "application/json"
-            except BaseException:
-                response['headers']['Content-Type'] = "text/plain"
-
-            items = []
-            for k, v in response['headers'].items():
-                if not isinstance(v, str):
-                    self.log.info("function response error: %s",
-                                  "value in headers is not str")
-                    return populate_http_response(502, "function response error")
-                items.append(k + _Equal_ + v)
-            message['Metadata']['headers'] = _Delim_.join(items)
-
-        return function_pb2.Message(Metadata=message['Metadata'],
-                                    Payload=message['Payload'])
+                self.log.error(err, exc_info=True)
+                raise Exception("[UserCodeReturn] ", err)
+        return request
 
 
 def get_functions(code_path):
@@ -300,45 +244,6 @@ def get_logger(c):
 
     logger.addHandler(handler)
     return logger
-
-
-def parse_http_params(request):
-    event = dict()
-    event['path'] = request.Metadata['path']
-    event['resource'] = request.Metadata['path']
-    event['httpMethod'] = request.Metadata['httpMethod']
-    event['pathParameters'] = {}
-    event['body'] = request.Payload.decode()
-    event['isBase64Encoded'] = request.Metadata['isBase64Encoded']
-    event['queryStringParameters'] = parse.parse_qs(
-        request.Metadata['queryStringParameters'])
-    event['headers'] = request.Metadata['headers']
-    headers = dict()
-    for header in event['headers'].split(_Delim_):
-        kv = header.split(_Equal_)
-        headers[kv[0]] = kv[1]
-    event['headers'] = headers
-    event['requestContext'] = {
-        "stage": "",
-        "requestId": request.Metadata['invokeId'],
-        "resourcePath": event['resource'],
-        "httpMethod": event['httpMethod'],
-        "apiId": "",
-        "sourceIp": "",
-    }
-    return event
-
-
-def populate_http_response(code, msg):
-    metadata = {
-        'statusCode': str(code)
-    }
-    body = {
-        "errorCode": str(code),
-        "message": msg,
-    }
-
-    return function_pb2.Message(Payload=json.dumps(body).encode('utf-8'), Metadata=metadata)
 
 
 if __name__ == '__main__':

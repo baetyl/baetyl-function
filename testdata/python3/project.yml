@@ -1,4 +1,4 @@
 functions:
-  - name: 'python36-project'
-    handler: 'hello.handler'
+  - name: 'project'
+    handler: 'index.handler'
     codedir: './project'
