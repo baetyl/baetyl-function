@@ -1,4 +1,4 @@
-FROM --platform=$TARGETPLATFORM node:10.19.0-buster-slim
-COPY *.js *.json /bin/
-RUN cd /bin/ && chmod +x runtime.js && npm install
+FROM --platform=$TARGETPLATFORM baetyltechtest/node:10.19-devel
+COPY *.js /bin/
+RUN cd /bin/ && chmod +x runtime.js
 ENTRYPOINT ["runtime.js"]
