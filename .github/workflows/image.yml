@@ -24,4 +24,4 @@ jobs:
         uses: actions/checkout@v1
       - name: build and publish docker image
         run: |
-          make runtime-image PLATFORMS=all XFLAGS=--push REGISTRY=baetyltechtest
+          make runtime-image PLATFORMS=all XFLAGS=--push REGISTRY=baetyltechtest/
