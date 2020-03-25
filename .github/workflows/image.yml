@@ -22,6 +22,9 @@ jobs:
           docker login -u ${{ secrets.DOCKER_REGISTRY_ID }} -p ${{ secrets.DOCKER_REGISTRY_PASS }}
       - name: Checkout code
         uses: actions/checkout@v1
-      - name: build and publish docker image
+      - name: build and publish runtime image
         run: |
           make runtime-image PLATFORMS=all XFLAGS=--push REGISTRY=baetyltechtest/
+      - name: build and publish baetyl-function image
+        run: |
+          make image PLATFORMS=all XFLAGS=--push REGISTRY=baetyltechtest/
