@@ -1,30 +1,45 @@
 package main
 
 import (
+	"crypto/tls"
 	"io"
 	"sync"
 
 	"github.com/baetyl/baetyl-go/log"
+	"github.com/valyala/fasthttp"
 	"google.golang.org/grpc"
 )
 
 // Manager Manager
 type Manager interface {
 	GetGRPCConnection(string, bool) (*grpc.ClientConn, error)
+	GetHttpClient() *fasthttp.Client
 	io.Closer
 }
 
 type manager struct {
 	log            *log.Logger
+	cfg            *ClientConfig
 	lock           *sync.Mutex
+	httpClient     *fasthttp.Client
 	connectionPool map[string]*grpc.ClientConn
 }
 
 // NewGRPCManager
-func NewManager() Manager {
+func NewManager(cfg ClientConfig) Manager {
+	httpClient := &fasthttp.Client{
+		MaxConnsPerHost: cfg.Http.MaxConnsPerHost,
+		// TODO: support tls
+		TLSConfig:                 &tls.Config{InsecureSkipVerify: true},
+		ReadTimeout:               cfg.Http.ReadTimeout,
+		MaxIdemponentCallAttempts: cfg.Http.MaxIdemponentCallAttempts,
+		MaxConnDuration:           cfg.Http.MaxConnDuration,
+	}
 	return &manager{
 		log:            log.With(log.Any("main", "manager")),
+		cfg:            &cfg,
 		lock:           &sync.Mutex{},
+		httpClient:     httpClient,
 		connectionPool: map[string]*grpc.ClientConn{},
 	}
 }
@@ -43,6 +58,7 @@ func (g *manager) GetGRPCConnection(address string, recreateIfExists bool) (*grp
 
 	opts := []grpc.DialOption{
 		grpc.WithBlock(),
+		// TODO: tls support
 		grpc.WithInsecure(),
 	}
 
@@ -57,6 +73,11 @@ func (g *manager) GetGRPCConnection(address string, recreateIfExists bool) (*grp
 	g.lock.Unlock()
 
 	return conn, nil
+}
+
+// GetHttpClient returns a fasthttp client
+func (g *manager) GetHttpClient() *fasthttp.Client {
+	return g.httpClient
 }
 
 func (g *manager) Close() error {
