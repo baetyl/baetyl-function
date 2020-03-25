@@ -12,10 +12,7 @@ func main() {
 			return err
 		}
 
-		api, err := NewAPI(cfg)
-		if err != nil {
-			return err
-		}
+		api := NewAPI(cfg)
 		defer api.Close()
 		ctx.Wait()
 		return nil

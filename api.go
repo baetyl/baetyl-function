@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -11,16 +12,6 @@ import (
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
 )
-
-const (
-	// HTTPStatusCode statusCode
-	HTTPStatusCode = "statusCode"
-)
-
-// Config
-type Config struct {
-	Server ServerConfig `yaml:"server" json:"server"`
-}
 
 type API struct {
 	log       *log.Logger
@@ -35,25 +26,34 @@ type Endpoint struct {
 	Handler func(c *routing.Context) error
 }
 
-func NewAPI(cfg Config) (*API, error) {
-	m := NewManager()
+func NewAPI(cfg Config) *API {
+	m := NewManager(cfg.Client)
 	api := &API{
 		log:     log.With(log.Any("main", "api")),
 		cfg:     &cfg,
 		manager: m,
 	}
-	api.endpoints = append(api.endpoints, api.constructFunctionEndpoints()...)
-	api.endpoints = append(api.endpoints, api.constructServiceEndpoints()...)
+	api.endpoints = append(api.endpoints, api.proxyEndpoints()...)
 
 	handler := api.useRouter()
 	go func() {
-		// TODO: support tls
-		if err := fasthttp.ListenAndServe(cfg.Server.Address, handler); err != nil {
-			panic(err)
+		api.log.Info("server is running.", log.Any("address", cfg.Server.Address))
+		if cfg.Server.Cert != "" || cfg.Server.Key != "" {
+			if err := fasthttp.ListenAndServeTLS(cfg.Server.Address,
+				cfg.Server.Cert, cfg.Server.Key, handler); err != nil {
+				api.log.Error("server shutdown.", log.Error(err))
+				api.Close()
+			}
+		} else {
+			if err := fasthttp.ListenAndServe(cfg.Server.Address,
+				handler); err != nil {
+				api.log.Error("server shutdown.", log.Error(err))
+				api.Close()
+			}
 		}
 	}()
 
-	return api, nil
+	return api
 }
 
 // Close closes api
@@ -74,33 +74,58 @@ func (a *API) useRouter() fasthttp.RequestHandler {
 	return router.HandleRequest
 }
 
-func (a *API) constructFunctionEndpoints() []Endpoint {
+func (a *API) proxyEndpoints() []Endpoint {
 	return []Endpoint{
 		{
 			Methods: []string{http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodPut},
-			Route:   "/baetyl-function/<service>",
-			Handler: a.onFunctionMessage,
+			Route:   "/<service>",
+			Handler: a.onHttpMessage,
 		},
 		{
 			Methods: []string{http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodPut},
-			Route:   "/baetyl-function/<service>/<function>",
-			Handler: a.onFunctionMessage,
+			Route:   "/<service>/<function>",
+			Handler: a.onHttpMessage,
 		},
-	}
-}
-
-func (a *API) constructServiceEndpoints() []Endpoint {
-	return []Endpoint{
 		{
 			Methods: []string{http.MethodGet, http.MethodPost, http.MethodDelete, http.MethodPut},
-			Route:   "/*",
+			Route:   "/<service>/<function>/*",
 			Handler: a.onServiceMessage,
 		},
 	}
 }
 
+func (a *API) onHttpMessage(c *routing.Context) error {
+	service := c.Param("service")
+	if service != "" {
+		switch string(c.Host()) {
+		case a.cfg.Server.Host.Function:
+			return a.onFunctionMessage(c)
+		case a.cfg.Server.Host.Service:
+			return a.onServiceMessage(c)
+		}
+	}
+	respondError(c, 404, "ERR_NO_ROUTE", "no route")
+	return nil
+}
+
 func (a *API) onServiceMessage(c *routing.Context) error {
-	// TODO: http proxy
+	host := fmt.Sprintf("%s/", a.cfg.Server.Host.Service)
+	url := strings.Replace(c.URI().String(), host, "", 1)
+
+	req := fasthttp.AcquireRequest()
+	resp := fasthttp.AcquireResponse()
+
+	c.Request.SetRequestURI(url)
+	c.Request.CopyTo(req)
+	client := a.manager.GetHttpClient()
+	if err := client.Do(req, resp); err != nil {
+		respondError(c, 500, "ERR_SERVICE_CALL", err.Error())
+		return nil
+	}
+
+	resp.CopyTo(&c.Response)
+	fasthttp.ReleaseRequest(req)
+	fasthttp.ReleaseResponse(resp)
 	return nil
 }
 
@@ -123,27 +148,22 @@ func (a *API) onFunctionMessage(c *routing.Context) error {
 		Metadata: metedata,
 	}
 
-	address := ResolveAddress(serviceName)
+	address := fmt.Sprintf("%s:%d", serviceName, a.cfg.Client.Grpc.Port)
 	conn, err := a.manager.GetGRPCConnection(address, false)
 	if err != nil {
-		msg := NewErrorResponse("ERR_FUNCTION_CALL", err.Error())
-		respondWithError(c.RequestCtx, 500, msg)
+		respondError(c, 500, "ERR_FUNCTION_GRPC", err.Error())
+		return nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), a.cfg.Server.Timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), a.cfg.Client.Grpc.Timeout)
 	defer cancel()
 
 	client := baetyl.NewFunctionClient(conn)
 	resp, err := client.Call(ctx, &message)
 	if err != nil {
-		msg := NewErrorResponse("ERR_FUNCTION_CALL", err.Error())
-		respondWithError(c.RequestCtx, 500, msg)
+		respondError(c, 500, "ERR_FUNCTION_CALL", err.Error())
+		return nil
 	}
-	respond(c.RequestCtx, http.StatusOK, resp.Payload)
+	respond(c, http.StatusOK, resp.Payload)
 	return nil
-}
-
-func ResolveAddress(serviceName string) string {
-	// TODO: using serviceName to get ip:port
-	return "0.0.0.0:50080"
 }
