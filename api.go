@@ -113,18 +113,17 @@ func (a *API) onServiceMessage(c *routing.Context) error {
 	url := strings.Replace(c.URI().String(), host, "", 1)
 
 	req := fasthttp.AcquireRequest()
+	resp := fasthttp.AcquireResponse()
+
 	c.Request.SetRequestURI(url)
 	c.Request.CopyTo(req)
-
-	resp := fasthttp.AcquireResponse()
 	client := a.manager.GetHttpClient()
 	if err := client.Do(req, resp); err != nil {
-		fmt.Println(err)
 		respondError(c, 500, "ERR_SERVICE_CALL", err.Error())
 		return nil
 	}
-	resp.CopyTo(&c.Response)
 
+	resp.CopyTo(&c.Response)
 	fasthttp.ReleaseRequest(req)
 	fasthttp.ReleaseResponse(resp)
 	return nil

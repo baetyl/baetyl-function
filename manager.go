@@ -51,13 +51,12 @@ func (g *manager) GetGRPCConnection(address string, recreateIfExists bool) (*grp
 	}
 
 	g.lock.Lock()
+	defer g.lock.Unlock()
 	if val, ok := g.connectionPool[address]; ok && !recreateIfExists {
-		g.lock.Unlock()
 		return val, nil
 	}
 
 	opts := []grpc.DialOption{
-		grpc.WithBlock(),
 		// TODO: tls support
 		grpc.WithInsecure(),
 	}
@@ -65,13 +64,10 @@ func (g *manager) GetGRPCConnection(address string, recreateIfExists bool) (*grp
 	conn, err := grpc.Dial(address, opts...)
 	if err != nil {
 		g.log.Error("failed to create connection to server", log.Error(err), log.Any("address", address))
-		g.lock.Unlock()
 		return nil, err
 	}
 
 	g.connectionPool[address] = conn
-	g.lock.Unlock()
-
 	return conn, nil
 }
 
@@ -84,7 +80,7 @@ func (g *manager) Close() error {
 	for address, conn := range g.connectionPool {
 		err := conn.Close()
 		if err != nil {
-			g.log.Error("failed to close connection", log.Error(err), log.Any("address", address))
+			g.log.Warn("failed to close connection", log.Error(err), log.Any("address", address))
 		}
 	}
 	return nil

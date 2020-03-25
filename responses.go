@@ -23,15 +23,10 @@ func NewErrorResponse(errCode, message string) ErrorResponse {
 	}
 }
 
-func respondWithJSON(c *routing.Context, code int, obj []byte) {
-	respond(c, code, obj)
-	c.RequestCtx.Response.Header.SetContentType(jsonContentTypeHeader)
-}
-
 func respondError(c *routing.Context, code int, errCode, msg string) {
 	resp := NewErrorResponse(errCode, msg)
 	b, _ := json.Marshal(&resp)
-	respondWithJSON(c, code, b)
+	respond(c, code, b)
 }
 
 func respond(c *routing.Context, code int, obj []byte) {
