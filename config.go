@@ -13,8 +13,14 @@ type Config struct {
 
 // ServerConfig http server config
 type ServerConfig struct {
-	Address           string `yaml:"address" json:"address" default:":8080"`
+	Host              Host   `yaml:"host" json:"host"`
+	Address           string `yaml:"address" json:"address" default:":80"`
 	utils.Certificate `yaml:",inline" json:",inline"`
+}
+
+type Host struct {
+	Function string `yaml:"function" json:"function" default:"baetyl-function"`
+	Service  string `yaml:"service" json:"service" default:"baetyl-proxy"`
 }
 
 type ClientConfig struct {
@@ -30,5 +36,6 @@ type HttpConfig struct {
 }
 
 type GrpcConfig struct {
+	Port    int           `yaml:"port" json:"port" default:"80"`
 	Timeout time.Duration `yaml:"timeout" json:"timeout" default:"5m"`
 }

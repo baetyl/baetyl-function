@@ -37,8 +37,7 @@ func respondError(c *routing.Context, code int, errCode, msg string) {
 func respond(c *routing.Context, code int, obj []byte) {
 	c.RequestCtx.Response.SetStatusCode(code)
 	c.RequestCtx.Response.SetBody(obj)
-
-	if len(c.RequestCtx.Response.Header.ContentType()) == 0 {
+	if json.Valid(obj) {
 		c.RequestCtx.Response.Header.SetContentType(jsonContentTypeHeader)
 	}
 }

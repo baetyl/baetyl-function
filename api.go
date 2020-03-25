@@ -3,18 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
+
 	baetyl "github.com/baetyl/baetyl-go/faas"
 	"github.com/baetyl/baetyl-go/log"
 	"github.com/docker/distribution/uuid"
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
-	"net/http"
-	"strings"
-)
-
-const (
-	BAETYLFUNCTION = "baetyl-function"
-	BAETYLPROXY    = "baetyl-proxy"
 )
 
 type API struct {
@@ -41,15 +37,18 @@ func NewAPI(cfg Config) *API {
 
 	handler := api.useRouter()
 	go func() {
+		api.log.Info("server is running.", log.Any("address", cfg.Server.Address))
 		if cfg.Server.Cert != "" || cfg.Server.Key != "" {
 			if err := fasthttp.ListenAndServeTLS(cfg.Server.Address,
 				cfg.Server.Cert, cfg.Server.Key, handler); err != nil {
-				panic(err)
+				api.log.Error("server shutdown.", log.Error(err))
+				api.Close()
 			}
 		} else {
 			if err := fasthttp.ListenAndServe(cfg.Server.Address,
 				handler); err != nil {
-				panic(err)
+				api.log.Error("server shutdown.", log.Error(err))
+				api.Close()
 			}
 		}
 	}()
@@ -99,9 +98,9 @@ func (a *API) onHttpMessage(c *routing.Context) error {
 	service := c.Param("service")
 	if service != "" {
 		switch string(c.Host()) {
-		case BAETYLFUNCTION:
+		case a.cfg.Server.Host.Function:
 			return a.onFunctionMessage(c)
-		case BAETYLPROXY:
+		case a.cfg.Server.Host.Service:
 			return a.onServiceMessage(c)
 		}
 	}
@@ -110,7 +109,7 @@ func (a *API) onHttpMessage(c *routing.Context) error {
 }
 
 func (a *API) onServiceMessage(c *routing.Context) error {
-	host := fmt.Sprintf("%s/", BAETYLPROXY)
+	host := fmt.Sprintf("%s/", a.cfg.Server.Host.Service)
 	url := strings.Replace(c.URI().String(), host, "", 1)
 
 	req := fasthttp.AcquireRequest()
@@ -120,6 +119,7 @@ func (a *API) onServiceMessage(c *routing.Context) error {
 	resp := fasthttp.AcquireResponse()
 	client := a.manager.GetHttpClient()
 	if err := client.Do(req, resp); err != nil {
+		fmt.Println(err)
 		respondError(c, 500, "ERR_SERVICE_CALL", err.Error())
 		return nil
 	}
@@ -149,7 +149,8 @@ func (a *API) onFunctionMessage(c *routing.Context) error {
 		Metadata: metedata,
 	}
 
-	conn, err := a.manager.GetGRPCConnection(serviceName, false)
+	address := fmt.Sprintf("%s:%d", serviceName, a.cfg.Client.Grpc.Port)
+	conn, err := a.manager.GetGRPCConnection(address, false)
 	if err != nil {
 		respondError(c, 500, "ERR_FUNCTION_GRPC", err.Error())
 		return nil
