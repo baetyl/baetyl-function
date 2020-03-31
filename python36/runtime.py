@@ -28,7 +28,7 @@ class mo(function_pb2_grpc.FunctionServicer):
     """
 
     def __init__(self):
-        self.name = 'baetyl-function'
+        self.name = 'baetyl-python36'
         self.conf_path = '/etc/baetyl/service.yml'
         self.code_path = '/var/lib/baetyl/code'
         self.server_address = "0.0.0.0:80"
