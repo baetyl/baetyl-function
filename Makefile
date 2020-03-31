@@ -1,4 +1,5 @@
-MODULE:=baetyl-function
+MODULE:=function
+BIN:=baetyl-$(MODULE)
 SRC_FILES:=$(shell find . -type f -name '*.go')
 PLATFORM_ALL:=darwin/amd64 linux/amd64 linux/arm64 linux/arm/v7
 
@@ -9,7 +10,6 @@ GIT_REV:=git-$(shell git rev-parse --short HEAD)
 VERSION:=$(if $(GIT_TAG),$(GIT_TAG),$(GIT_REV))
 
 GO_FLAGS?=-ldflags '-X "github.com/baetyl/baetyl-go/utils.REVISION=$(GIT_REV)" -X "github.com/baetyl/baetyl-go/utils.VERSION=$(VERSION)"'
-GO_FLAGS_STATIC?=-ldflags '-X "github.com/baetyl/baetyl-go/utils.REVISION=$(GIT_REV)" -X "github.com/baetyl/baetyl-go/utils.VERSION=$(VERSION)" -linkmode external -w -extldflags "-static"'
 GO_TEST_FLAGS?=-race
 GO_TEST_PKGS?=$(shell go list ./...)
 ifndef PLATFORMS
@@ -30,8 +30,8 @@ XPLATFORMS:=$(shell echo $(filter-out darwin/amd64,$(PLATFORMS)) | sed 's: :,:g'
 
 .PHONY: all
 all: $(SRC_FILES)
-	@echo "BUILD $(MODULE)"
-	@env go build -o $(MODULE) $(GO_FLAGS) .
+	@echo "BUILD $(BIN)"
+	@env GO111MODULE=on GOPROXY=https://goproxy.cn CGO_ENABLED=0 go build -o $(BIN) $(GO_FLAGS) .
 
 .PHONY: image
 image:
@@ -57,4 +57,4 @@ fmt:
 
 .PHONY: clean
 clean:
-	@rm -rf $(MODULE)
+	@rm -rf $(BIN)
