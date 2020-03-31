@@ -65,13 +65,13 @@ const LoadFunctions = (file, functionsHandle) => {
          throw new Error('Module config invalid, missing functions');
     }
     config.functions.forEach(function (ele) {
-        if (ele.name === undefined || ele.handler === undefined || ele.codedir === undefined) {
-            throw new Error('config invalid, missing function name, handler or codedir');
+        if (ele.name === undefined || ele.handler === undefined || ele.codeDir === undefined) {
+            throw new Error('config invalid, missing function name, handler or codeDir');
         }
-        const codedir = ele.codedir;
+        const codeDir = ele.codeDir;
         const moduleHandler = ele.handler.split('.');
         const handlerName = moduleHandler[1];
-        const moduleName = require(path.join(path.dirname(file), codedir, moduleHandler[0]));
+        const moduleName = require(path.join(path.dirname(file), codeDir, moduleHandler[0]));
         functionsHandle[ele.name] = moduleName[handlerName];
     });
 };

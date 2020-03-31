@@ -1,7 +1,7 @@
 functions:
   - name: 'create1'
     handler: 'create1.handler'
-    codedir: './book'
+    codeDir: './book'
   - name: 'index'
     handler: 'index.handler'
-    codedir: 'book'
+    codeDir: 'book'
