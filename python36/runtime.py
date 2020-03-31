@@ -144,14 +144,14 @@ def load_functions(root, name, functions_handler):
         raise Exception('config invalid, missing functions')
 
     for fc in config['functions']:
-        if 'name' not in fc or 'handler' not in fc or 'codedir' not in fc:
+        if 'name' not in fc or 'handler' not in fc or 'codeDir' not in fc:
             raise Exception(
-                'config invalid, missing function name, handler or codedir')
+                'config invalid, missing function name, handler or codeDir')
         module_spec = fc['handler'].split('.')
         handler_name = module_spec.pop()
         module_name = module_spec.pop()
         module = importlib.import_module(
-            os.path.join(fc['codedir'], module_name).replace('./', '').replace('/', '.'))
+            os.path.join(fc['codeDir'], module_name).replace('./', '').replace('/', '.'))
         functions_handler[fc['name']] = getattr(module, handler_name)
 
 

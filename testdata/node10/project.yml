@@ -1,4 +1,4 @@
 functions:
   - name: 'project'
     handler: 'index.handler'
-    codedir: 'project'
+    codeDir: 'project'
