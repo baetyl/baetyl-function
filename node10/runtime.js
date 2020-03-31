@@ -122,7 +122,7 @@ const getGrpcServer = config => {
 
 class NodeRuntimeModule {
     constructor() {
-        this.name = 'baetyl-function';
+        this.name = 'baetyl-node10';
         this.confPath = '/etc/baetyl/service.yml';
         this.codePath = '/var/lib/baetyl/code';
         this.serverAddress = "0.0.0.0:80"
