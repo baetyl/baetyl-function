@@ -79,6 +79,9 @@ const LoadFunctions = (file, functionsHandle) => {
 const getFunctions = codePath => {
     let functionsHandle = {};
     codePath = path.join(process.cwd(), codePath);
+    if (!fs.existsSync(codePath)) {
+        throw new Error('no such file or directory: ' + codePath);
+    }
 
     let list = fs.readdirSync(codePath);
     list.forEach(function(file) {

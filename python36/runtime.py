@@ -125,6 +125,9 @@ class mo(function_pb2_grpc.FunctionServicer):
 
 def get_functions(code_path):
     functions_handler = {}
+    if not os.path.exists(code_path):
+        raise Exception("no such file or directory: ", code_path)
+
     for root, dirs, files in os.walk(code_path):
         sys.path.append(code_path)
         for name in files:
