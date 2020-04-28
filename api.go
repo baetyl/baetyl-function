@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	baetyl "github.com/baetyl/baetyl-go/faas"
+	baetylhttp "github.com/baetyl/baetyl-go/http"
 	"github.com/baetyl/baetyl-go/log"
 	"github.com/docker/distribution/uuid"
 	routing "github.com/qiangxue/fasthttp-routing"
@@ -16,6 +17,7 @@ import (
 type API struct {
 	log       *log.Logger
 	cfg       *Config
+	svr       *baetylhttp.Server
 	manager   Manager
 	endpoints []Endpoint
 }
@@ -36,28 +38,16 @@ func NewAPI(cfg Config) *API {
 	api.endpoints = append(api.endpoints, api.proxyEndpoints()...)
 
 	handler := api.useRouter()
-	go func() {
-		api.log.Info("server is running.", log.Any("address", cfg.Server.Address))
-		if cfg.Server.Cert != "" || cfg.Server.Key != "" {
-			if err := fasthttp.ListenAndServeTLS(cfg.Server.Address,
-				cfg.Server.Cert, cfg.Server.Key, handler); err != nil {
-				api.log.Error("server shutdown.", log.Error(err))
-				api.Close()
-			}
-		} else {
-			if err := fasthttp.ListenAndServe(cfg.Server.Address,
-				handler); err != nil {
-				api.log.Error("server shutdown.", log.Error(err))
-				api.Close()
-			}
-		}
-	}()
-
+	api.svr = baetylhttp.NewServer(cfg.Server.ServerConfig, handler)
+	api.svr.Start()
 	return api
 }
 
 // Close closes api
 func (a *API) Close() {
+	if a.svr != nil {
+		a.svr.Close()
+	}
 	if a.manager != nil {
 		a.manager.Close()
 	}
