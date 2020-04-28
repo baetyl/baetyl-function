@@ -67,7 +67,7 @@ func TestServer2(t *testing.T) {
 	time.Sleep(time.Second)
 
 	req := fasthttp.AcquireRequest()
-	url := "http://127.0.0.1:50051"
+	url := "http://127.0.0.1:50061"
 	req.SetRequestURI(url)
 
 	resp := fasthttp.AcquireResponse()
@@ -76,21 +76,21 @@ func TestServer2(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode(), 404)
 
-	url2 := fmt.Sprintf("%s/%s", "http://127.0.0.1:50051", "127.0.0.1:8523/angthing")
+	url2 := fmt.Sprintf("%s/%s", "http://127.0.0.1:50061", "127.0.0.1:8523/angthing")
 	req.SetRequestURI(url2)
 	err = client.Do(req, resp)
 	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode(), 200)
 	assert.Equal(t, "Hello One!", string(resp.Body()))
 
-	url3 := fmt.Sprintf("%s/%s", "http://127.0.0.1:50051", "127.0.0.1:8523/anything/anything")
+	url3 := fmt.Sprintf("%s/%s", "http://127.0.0.1:50061", "127.0.0.1:8523/anything/anything")
 	req.SetRequestURI(url3)
 	err = client.Do(req, resp)
 	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode(), 200)
 	assert.Equal(t, "Hello Two!", string(resp.Body()))
 
-	url4 := fmt.Sprintf("%s/%s", "http://127.0.0.1:50051", "127.0.0.1:8523/anything/anything/anything")
+	url4 := fmt.Sprintf("%s/%s", "http://127.0.0.1:50061", "127.0.0.1:8523/anything/anything/anything")
 	req.SetRequestURI(url4)
 	err = client.Do(req, resp)
 	assert.NoError(t, err)
@@ -160,8 +160,8 @@ func mockConfig1() Config {
 func mockConfig2() Config {
 	var cfg Config
 	utils.UnmarshalYAML(nil, &cfg)
-	cfg.Server.Address = ":50051"
-	cfg.Server.Host.Service = "127.0.0.1:50051"
+	cfg.Server.Address = ":50061"
+	cfg.Server.Host.Service = "127.0.0.1:50061"
 	cfg.Client.Grpc.Port = 50010
 	return cfg
 }

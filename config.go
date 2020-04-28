@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/baetyl/baetyl-go/utils"
+	"github.com/baetyl/baetyl-go/http"
 	"time"
 )
 
@@ -13,9 +13,8 @@ type Config struct {
 
 // ServerConfig http server config
 type ServerConfig struct {
-	Host              Host   `yaml:"host" json:"host"`
-	Address           string `yaml:"address" json:"address" default:":80"`
-	utils.Certificate `yaml:",inline" json:",inline"`
+	Host              Host `yaml:"host" json:"host"`
+	http.ServerConfig `yaml:"server" json:"server"`
 }
 
 type Host struct {
