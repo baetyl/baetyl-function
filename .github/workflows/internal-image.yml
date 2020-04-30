@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v1
       - name: build and publish runtime image
         run: |
-          make runtime-image PLATFORMS=all XFLAGS=--push REGISTRY=baetyltechtest/
+          make runtime-image PLATFORMS=all XFLAGS=--push REGISTRY=hub.baidubce.com/btl-test/
       - name: build and publish baetyl-function image
         run: |
           make image PLATFORMS=all XFLAGS=--push REGISTRY=hub.baidubce.com/btl-test/
