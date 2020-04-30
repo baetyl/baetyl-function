@@ -201,14 +201,11 @@ class NodeRuntimeModule {
 
         let msg = '';
         const Payload = call.request.getPayload();
-        if (Payload) {
-            try {
-                const payloadString = Buffer.from(Payload).toString();
-                msg = JSON.parse(payloadString);
-            }
-            catch (error) {
-                msg = Buffer.from(Payload); // raw data, not json format
-            }
+        try {
+            const payloadString = Buffer.from(Payload).toString();
+            msg = JSON.parse(payloadString);
+        } catch (error) {
+            msg = Buffer.from(Payload); // raw data, not json format
         }
 
         let functionHandle = this.functionsHandle[functionName];
