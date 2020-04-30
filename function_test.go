@@ -57,7 +57,7 @@ func Test_FunctionInstance(t *testing.T) {
 
 			p, err := os.StartProcess(
 				_exec,
-				[]string{"python3", tt.runFile},
+				[]string{tt._exec, tt.runFile},
 				&os.ProcAttr{
 					Env: env,
 					Files: []*os.File{
@@ -168,9 +168,7 @@ func Test_FunctionInstance(t *testing.T) {
 			resp3, err3 := cli.Call(ctx3, msg3)
 			assert.NoError(t, err3)
 			assert.NotEmpty(t, resp3)
-
-			resp3, err3 = cli.Call(ctx3, msg3)
-			assert.NoError(t, err3)
+			assert.NotEmpty(t, resp3.Payload)
 
 			// round 4: test error
 			msgID4 := uint64(1234)

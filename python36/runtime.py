@@ -98,11 +98,10 @@ class mo(function_pb2_grpc.FunctionServicer):
             ctx[k] = request.Metadata[k]
 
         msg = b''
-        if request.Payload:
-            try:
-                msg = json.loads(request.Payload)
-            except BaseException:
-                msg = request.Payload  # raw data, not json format
+        try:
+            msg = json.loads(request.Payload)
+        except BaseException:
+            msg = request.Payload  # raw data, not json format
 
         try:
             msg = self.functions[function](msg, ctx)
