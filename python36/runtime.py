@@ -49,19 +49,15 @@ class mo(function_pb2_grpc.FunctionServicer):
         if 'SERVICE_ADDRESS' in os.environ:
             self.server_address = os.environ['SERVICE_ADDRESS']
 
-        self.config = {
-            'server': {
-                'address': self.server_address
-            }
-        }
+        self.config = {}
 
         if os.path.exists(self.conf_path):
             self.config = yaml.load(
-                open(self.config, 'r').read(), Loader=yaml.FullLoader)
+                open(self.conf_path, 'r').read(), Loader=yaml.FullLoader)
 
         self.log = get_logger(self)
-        self.functions = get_functions(self.code_path)
-        self.server = get_grpc_server(self.config['server'])
+        self.functions = get_functions(self)
+        self.server = get_grpc_server(self)
         function_pb2_grpc.add_FunctionServicer_to_server(self, self.server)
 
     def Start(self):
@@ -122,27 +118,19 @@ class mo(function_pb2_grpc.FunctionServicer):
         return request
 
 
-def get_functions(code_path):
+def get_functions(s):
     functions_handler = {}
-    if not os.path.exists(code_path):
-        raise Exception("no such file or directory: ", code_path)
+    if 'functions' not in s.config:
+        return functions_handler
+        
+    if not os.path.exists(s.code_path):
+        raise Exception("no such file or directory: ", s.code_path)
 
-    for root, dirs, files in os.walk(code_path):
-        sys.path.append(code_path)
-        for name in files:
-            if os.path.splitext(name)[-1] == ".yml":
-                load_functions(root, name, functions_handler)
-        break
-    return functions_handler
+    
 
-
-def load_functions(root, name, functions_handler):
-    config = yaml.load(open(os.path.join(root, name),
-                            'r').read(), Loader=yaml.FullLoader)
-    if 'functions' not in config:
-        raise Exception('config invalid, missing functions')
-
-    for fc in config['functions']:
+    functions = s.config['functions']
+    sys.path.append(s.code_path)
+    for fc in functions:
         if 'name' not in fc or 'handler' not in fc or 'codeDir' not in fc:
             raise Exception(
                 'config invalid, missing function name, handler or codeDir')
@@ -152,12 +140,19 @@ def load_functions(root, name, functions_handler):
         module = importlib.import_module(
             os.path.join(fc['codeDir'], module_name).replace('./', '').replace('/', '.'))
         functions_handler[fc['name']] = getattr(module, handler_name)
+    return functions_handler
 
-
-def get_grpc_server(c):
+def get_grpc_server(s):
     """
     get grpc server
     """
+
+    c = {
+        'address': s.server_address
+    }
+    if 'server' in s.config:
+        c = s.config['server']
+
     max_workers = None
     max_concurrent = None
     max_message_length = 4 * 1024 * 1024

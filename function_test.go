@@ -4,10 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	baetyl "github.com/baetyl/baetyl-go/faas"
-	"github.com/docker/distribution/uuid"
-	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc"
 	"os"
 	"os/exec"
 	"path"
@@ -15,6 +11,11 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	baetyl "github.com/baetyl/baetyl-go/faas"
+	"github.com/docker/distribution/uuid"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 )
 
 func Test_FunctionInstance(t *testing.T) {
@@ -23,6 +24,7 @@ func Test_FunctionInstance(t *testing.T) {
 		_exec        string
 		functionName string
 		codePath     string
+		confFile     string
 		address      string
 		runFile      string
 	}{
@@ -30,7 +32,8 @@ func Test_FunctionInstance(t *testing.T) {
 			name:         "test python3 runtime",
 			_exec:        "python3",
 			functionName: "python3-sayhi",
-			codePath:     path.Join([]string{"testdata", "python3"}...),
+			codePath:     path.Join([]string{"testdata", "python3", "code"}...),
+			confFile:     path.Join([]string{"testdata", "python3", "config", "service.yml"}...),
 			address:      "127.0.0.1:51200",
 			runFile:      path.Join([]string{"python36", "runtime.py"}...),
 		},
@@ -38,7 +41,8 @@ func Test_FunctionInstance(t *testing.T) {
 			name:         "test node10 runtime",
 			_exec:        "node",
 			functionName: "node10-sayhi",
-			codePath:     path.Join([]string{"testdata", "node10"}...),
+			codePath:     path.Join([]string{"testdata", "node10", "code"}...),
+			confFile:     path.Join([]string{"testdata", "node10", "config", "service.yml"}...),
 			address:      "127.0.0.1:51201",
 			runFile:      path.Join([]string{"node10", "runtime.js"}...),
 		},
@@ -53,6 +57,7 @@ func Test_FunctionInstance(t *testing.T) {
 			env := os.Environ()
 			env = append(env, fmt.Sprintf("%s=%s", "SERVICE_NAME", tt.functionName))
 			env = append(env, fmt.Sprintf("%s=%s", "SERVICE_CODE", tt.codePath))
+			env = append(env, fmt.Sprintf("%s=%s", "SERVICE_CONF", tt.confFile))
 			env = append(env, fmt.Sprintf("%s=%s", "SERVICE_ADDRESS", tt.address))
 
 			p, err := os.StartProcess(
