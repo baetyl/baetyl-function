@@ -1,4 +1,0 @@
-functions:
-  - name: 'project'
-    handler: 'index.handler'
-    codeDir: 'project'

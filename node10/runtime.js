@@ -8,7 +8,6 @@ const grpc = require('grpc');
 const yaml = require('yaml');
 const services = require('./function_grpc_pb.js');
 
-
 const hasAttr = (obj, attr) => {
     if (obj instanceof Object && !(obj instanceof Array)) {
         if (obj[attr] !== undefined) {
@@ -59,45 +58,44 @@ const getLogger = mo => {
     return log4js.getLogger(mo.config.name)
 };
 
-const LoadFunctions = (file, functionsHandle) => {
-    let config = yaml.parse(fs.readFileSync(file).toString());
-    if (!hasAttr(config, 'functions')) {
-         throw new Error('Module config invalid, missing functions');
+const getFunctions = s => {
+    let functionsHandle = {};
+    if (!hasAttr(s.config, 'functions')) {
+        return functionsHandle;
     }
-    config.functions.forEach(function (ele) {
+
+    codePath = path.join(process.cwd(), s.codePath);
+    if (!fs.existsSync(codePath)) {
+        throw new Error('no such file or directory: ' + codePath);
+    }
+
+    s.config.functions.forEach(function (ele) {
         if (ele.name === undefined || ele.handler === undefined || ele.codeDir === undefined) {
             throw new Error('config invalid, missing function name, handler or codeDir');
         }
         const codeDir = ele.codeDir;
         const moduleHandler = ele.handler.split('.');
         const handlerName = moduleHandler[1];
-        const moduleName = require(path.join(path.dirname(file), codeDir, moduleHandler[0]));
+        const moduleName = require(path.join(codePath, codeDir, moduleHandler[0]));
         functionsHandle[ele.name] = moduleName[handlerName];
-    });
-};
-
-const getFunctions = codePath => {
-    let functionsHandle = {};
-    codePath = path.join(process.cwd(), codePath);
-    if (!fs.existsSync(codePath)) {
-        throw new Error('no such file or directory: ' + codePath);
-    }
-
-    let list = fs.readdirSync(codePath);
-    list.forEach(function(file) {
-        if (path.extname(file)==='.yml') {
-            LoadFunctions(path.join(codePath, file), functionsHandle)
-        }
     });
     return functionsHandle;
 };
 
-const getGrpcServer = config => {
+const getGrpcServer = s => {
+    let config = {
+        'address': s.serverAddress
+    }
+
+    if (hasAttr(s.config, 'server')) {
+        config = s.config['server']
+    }
+
     let maxMessageSize = 4 * 1024 * 1024;
-    if (hasAttr(config['server'], 'message')
-        && hasAttr(config['server']['message'], 'length')
-        && hasAttr(config['server']['message']['length'], 'max')) {
-        maxMessageSize = config['server']['message']['length']['max'];
+    if (hasAttr(config, 'message')
+        && hasAttr(config['message'], 'length')
+        && hasAttr(config['message']['length'], 'max')) {
+        maxMessageSize = config['message']['length']['max'];
     }
     let server = new grpc.Server({
         'grpc.max_send_message_length': maxMessageSize,
@@ -106,20 +104,20 @@ const getGrpcServer = config => {
 
     let credentials = undefined;
 
-    if (hasAttr(config.server, 'ca')
-        && hasAttr(config.server, 'key')
-        && hasAttr(config.server, 'cert')) {
+    if (hasAttr(config, 'ca')
+        && hasAttr(config, 'key')
+        && hasAttr(config, 'cert')) {
 
         credentials = grpc.ServerCredentials.createSsl(
-            fs.readFileSync(config['server']['ca']), [{
-                cert_chain: fs.readFileSync(config['server']['cert']),
-                private_key: fs.readFileSync(config['server']['key'])
+            fs.readFileSync(config['ca']), [{
+                cert_chain: fs.readFileSync(config['cert']),
+                private_key: fs.readFileSync(config['key'])
             }], true);
     } else {
         credentials = grpc.ServerCredentials.createInsecure();
     }
 
-    server.bind(config['server']['address'], credentials);
+    server.bind(config['address'], credentials);
     return server;
 };
 
@@ -148,19 +146,15 @@ class NodeRuntimeModule {
             this.serverAddress = process.env['SERVICE_ADDRESS']
         }
 
-        this.config = {
-            'server': {
-                'address': this.serverAddress
-            }
-        };
+        this.config = {}
 
         if (fs.existsSync(this.confPath)) {
             this.config = yaml.parse(fs.readFileSync(this.confPath).toString());
         }
         
         this.logger = getLogger(this);
-        this.functionsHandle = getFunctions(this.codePath);
-        this.server = getGrpcServer(this.config);
+        this.functionsHandle = getFunctions(this);
+        this.server = getGrpcServer(this);
 
         this.server.addService(services.FunctionService, {
             call: (call, callback) => (this.Call(call, callback))
