@@ -125,20 +125,20 @@ class NodeRuntimeModule {
     }
 
     Load() {
-        if (hasAttr(process.env, 'SERVICE_NAME')) {
-            this.name = process.env['SERVICE_NAME']
+        if (hasAttr(process.env, 'BAETYL_SERVICE_NAME')) {
+            this.name = process.env['BAETYL_SERVICE_NAME']
         } 
 
-        if (hasAttr(process.env, 'SERVICE_CONF')) {
-            this.confPath = process.env['SERVICE_CONF']
+        if (hasAttr(process.env, 'BAETYL_CONF_FILE')) {
+            this.confPath = process.env['BAETYL_CONF_FILE']
         }
 
-        if (hasAttr(process.env, 'SERVICE_CODE')) {
-            this.codePath = process.env['SERVICE_CODE']
+        if (hasAttr(process.env, 'BAETYL_CODE_PATH')) {
+            this.codePath = process.env['BAETYL_CODE_PATH']
         }
 
-        if (hasAttr(process.env, 'SERVICE_ADDRESS')) {
-            this.serverAddress = process.env['SERVICE_ADDRESS']
+        if (hasAttr(process.env, 'BAETYL_SERVICE_ADDRESS')) {
+            this.serverAddress = process.env['BAETYL_SERVICE_ADDRESS']
         }
 
         this.config = {}
