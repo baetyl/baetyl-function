@@ -37,17 +37,17 @@ class mo(function_pb2_grpc.FunctionServicer):
         """
         load config and init module
         """
-        if 'SERVICE_NAME' in os.environ:
-            self.name = os.environ['SERVICE_NAME']
+        if 'BAETYL_SERVICE_NAME' in os.environ:
+            self.name = os.environ['BAETYL_SERVICE_NAME']
 
-        if 'SERVICE_CONF' in os.environ:
-            self.conf_path = os.environ['SERVICE_CONF']
+        if 'BAETYL_CONF_FILE' in os.environ:
+            self.conf_path = os.environ['BAETYL_CONF_FILE']
 
-        if 'SERVICE_CODE' in os.environ:
-            self.code_path = os.environ['SERVICE_CODE']
+        if 'BAETYL_CODE_PATH' in os.environ:
+            self.code_path = os.environ['BAETYL_CODE_PATH']
 
-        if 'SERVICE_ADDRESS' in os.environ:
-            self.server_address = os.environ['SERVICE_ADDRESS']
+        if 'BAETYL_SERVICE_ADDRESS' in os.environ:
+            self.server_address = os.environ['BAETYL_SERVICE_ADDRESS']
 
         self.config = {}
 
