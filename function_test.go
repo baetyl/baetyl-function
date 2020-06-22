@@ -58,10 +58,10 @@ func Test_FunctionInstance(t *testing.T) {
 			}
 
 			env := os.Environ()
-			env = append(env, fmt.Sprintf("%s=%s", "SERVICE_NAME", tt.functionName))
-			env = append(env, fmt.Sprintf("%s=%s", "SERVICE_CODE", tt.codePath))
-			env = append(env, fmt.Sprintf("%s=%s", "SERVICE_CONF", tt.confFile))
-			env = append(env, fmt.Sprintf("%s=%s", "SERVICE_ADDRESS", tt.address))
+			env = append(env, fmt.Sprintf("%s=%s", "BAETYL_SERVICE_NAME", tt.functionName))
+			env = append(env, fmt.Sprintf("%s=%s", "BAETYL_CODE_PATH", tt.codePath))
+			env = append(env, fmt.Sprintf("%s=%s", "BAETYL_CONF_FILE", tt.confFile))
+			env = append(env, fmt.Sprintf("%s=%s", "BAETYL_SERVICE_ADDRESS", tt.address))
 
 			p, err := os.StartProcess(
 				_exec,
