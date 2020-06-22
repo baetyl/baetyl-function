@@ -19,6 +19,9 @@ import (
 )
 
 func Test_FunctionInstance(t *testing.T) {
+	cmd, err := os.Getwd()
+	assert.NoError(t, err)
+
 	tests := []struct {
 		name         string
 		_exec        string
@@ -32,8 +35,8 @@ func Test_FunctionInstance(t *testing.T) {
 			name:         "test python3 runtime",
 			_exec:        "python3",
 			functionName: "python3-sayhi",
-			codePath:     path.Join([]string{"testdata", "python3", "code"}...),
-			confFile:     path.Join([]string{"testdata", "python3", "config", "service.yml"}...),
+			codePath:     path.Join([]string{cmd, "testdata", "python3", "code"}...),
+			confFile:     path.Join([]string{cmd, "testdata", "python3", "config", "service.yml"}...),
 			address:      "127.0.0.1:51200",
 			runFile:      path.Join([]string{"python36", "runtime.py"}...),
 		},
@@ -41,8 +44,8 @@ func Test_FunctionInstance(t *testing.T) {
 			name:         "test node10 runtime",
 			_exec:        "node",
 			functionName: "node10-sayhi",
-			codePath:     path.Join([]string{"testdata", "node10", "code"}...),
-			confFile:     path.Join([]string{"testdata", "node10", "config", "service.yml"}...),
+			codePath:     path.Join([]string{cmd, "testdata", "node10", "code"}...),
+			confFile:     path.Join([]string{cmd, "testdata", "node10", "config", "service.yml"}...),
 			address:      "127.0.0.1:51201",
 			runFile:      path.Join([]string{"node10", "runtime.js"}...),
 		},

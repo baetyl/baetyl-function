@@ -64,11 +64,6 @@ const getFunctions = s => {
         return functionsHandle;
     }
 
-    codePath = path.join(process.cwd(), s.codePath);
-    if (!fs.existsSync(codePath)) {
-        throw new Error('no such file or directory: ' + codePath);
-    }
-
     s.config.functions.forEach(function (ele) {
         if (ele.name === undefined || ele.handler === undefined || ele.codeDir === undefined) {
             throw new Error('config invalid, missing function name, handler or codeDir');
@@ -76,7 +71,7 @@ const getFunctions = s => {
         const codeDir = ele.codeDir;
         const moduleHandler = ele.handler.split('.');
         const handlerName = moduleHandler[1];
-        const moduleName = require(path.join(codePath, codeDir, moduleHandler[0]));
+        const moduleName = require(path.join(s.codePath, codeDir, moduleHandler[0]));
         functionsHandle[ele.name] = moduleName[handlerName];
     });
     return functionsHandle;

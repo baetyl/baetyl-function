@@ -123,14 +123,8 @@ def get_functions(s):
     if 'functions' not in s.config:
         return functions_handler
         
-    if not os.path.exists(s.code_path):
-        raise Exception("no such file or directory: ", s.code_path)
-
-    
-
-    functions = s.config['functions']
     sys.path.append(s.code_path)
-    for fc in functions:
+    for fc in s.config['functions']:
         if 'name' not in fc or 'handler' not in fc or 'codeDir' not in fc:
             raise Exception(
                 'config invalid, missing function name, handler or codeDir')
