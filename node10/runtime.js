@@ -65,13 +65,12 @@ const getFunctions = s => {
     }
 
     s.config.functions.forEach(function (ele) {
-        if (ele.name === undefined || ele.handler === undefined || ele.codeDir === undefined) {
-            throw new Error('config invalid, missing function name, handler or codeDir');
+        if (ele.name === undefined || ele.handler === undefined || ele.codedir === undefined) {
+            throw new Error('config invalid, missing function name, handler or codedir');
         }
-        const codeDir = ele.codeDir;
         const moduleHandler = ele.handler.split('.');
         const handlerName = moduleHandler[1];
-        const moduleName = require(path.join(s.codePath, codeDir, moduleHandler[0]));
+        const moduleName = require(path.join(s.codePath, ele.codedir, moduleHandler[0]));
         functionsHandle[ele.name] = moduleName[handlerName];
     });
     return functionsHandle;
