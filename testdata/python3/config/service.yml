@@ -1,10 +1,10 @@
 functions:
   - name: 'create1'
     handler: 'create1.handler'
-    codeDir: './book'
+    codedir: './book'
   - name: 'index'
     handler: 'index.handler'
-    codeDir: 'book'
+    codedir: 'book'
   - name: 'project'
     handler: 'index.handler'
-    codeDir: './project'
+    codedir: './project'
