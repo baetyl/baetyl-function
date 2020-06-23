@@ -18,8 +18,8 @@ type ServerConfig struct {
 }
 
 type Host struct {
-	Function string `yaml:"function" json:"function" default:"baetyl-function"`
-	Service  string `yaml:"service" json:"service" default:"baetyl-proxy"`
+	Function string `yaml:"function" json:"function" default:"baetyl-function.baetyl-edge-system"`
+	Service  string `yaml:"service" json:"service" default:"baetyl-proxy.baetyl-edge-system"`
 }
 
 type ClientConfig struct {

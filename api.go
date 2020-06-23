@@ -14,6 +14,10 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+const (
+	UserNamespace   = "baetyl-edge"
+)
+
 type API struct {
 	log       *log.Logger
 	cfg       *Config
@@ -99,13 +103,13 @@ func (a *API) onHttpMessage(c *routing.Context) error {
 }
 
 func (a *API) onServiceMessage(c *routing.Context) error {
-	host := fmt.Sprintf("%s/", a.cfg.Server.Host.Service)
-	url := strings.Replace(c.URI().String(), host, "", 1)
+	uri := c.Request.URI()
+	serviceName := c.Param("service")
+	uri.SetHost(fmt.Sprintf("%s.%s", serviceName, UserNamespace))
+	uri.SetPathBytes(uri.Path()[len(serviceName)+1:])
 
 	req := fasthttp.AcquireRequest()
 	resp := fasthttp.AcquireResponse()
-
-	c.Request.SetRequestURI(url)
 	c.Request.CopyTo(req)
 	client := a.manager.GetHttpClient()
 	if err := client.Do(req, resp); err != nil {
@@ -138,7 +142,7 @@ func (a *API) onFunctionMessage(c *routing.Context) error {
 		Metadata: metedata,
 	}
 
-	address := fmt.Sprintf("%s:%d", serviceName, a.cfg.Client.Grpc.Port)
+	address := fmt.Sprintf("%s.%s:%d", serviceName, UserNamespace, a.cfg.Client.Grpc.Port)
 	conn, err := a.manager.GetGRPCConnection(address, false)
 	if err != nil {
 		respondError(c, 500, "ERR_FUNCTION_GRPC", err.Error())
