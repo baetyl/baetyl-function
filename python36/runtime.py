@@ -125,14 +125,16 @@ def get_functions(s):
         
     sys.path.append(s.code_path)
     for fc in s.config['functions']:
-        if 'name' not in fc or 'handler' not in fc or 'codedir' not in fc:
+        if 'name' not in fc or 'handler' not in fc:
             raise Exception(
-                'config invalid, missing function name, handler or codedir')
+                'config invalid, missing function name or handler')
+
+        codedir = ('' if ('codedir' not in fc) else fc['codedir'])
         module_spec = fc['handler'].split('.')
         handler_name = module_spec.pop()
         module_name = module_spec.pop()
         module = importlib.import_module(
-            os.path.join(fc['codedir'], module_name).replace('./', '').replace('/', '.'))
+            os.path.join(codedir, module_name).replace('./', '').replace('/', '.'))
         functions_handler[fc['name']] = getattr(module, handler_name)
     return functions_handler
 
