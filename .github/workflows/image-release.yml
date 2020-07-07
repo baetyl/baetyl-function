@@ -1,5 +1,8 @@
-name: image
-on: push
+name: image-release
+on:
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   function-image:
@@ -19,18 +22,21 @@ jobs:
           docker -v
       - name: Checkout code
         uses: actions/checkout@v1
+      - id: version
+        run: |
+          echo ::set-output name=version::$(echo ${GITHUB_REF:10})
       - name: docker login
         run: |
           docker login -u ${{ secrets.DOCKER_REGISTRY_ID }} -p ${{ secrets.DOCKER_REGISTRY_PASS }}
       - name: build and publish baetyl-function image
         run: |
-          make image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/main' REGISTRY=baetyltechtest/
+          make image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/main' REGISTRY=baetyltechtest/ GIT_TAG=${{ steps.version.outputs.version }}
       - name: docker login internal
         run: |
           docker login hub.baidubce.com -u ${{ secrets.DOCKER_REGISTRY_ID_INTERNAL }} -p ${{ secrets.DOCKER_REGISTRY_PASS_INTERNAL }}
       - name: build and publish baetyl-function image to internal storage
         run: |
-          make image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/main' REGISTRY=hub.baidubce.com/baetyl-test/
+          make image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/main' REGISTRY=hub.baidubce.com/baetyl-test/ GIT_TAG=${{ steps.version.outputs.version }}
 
   runtime-image:
     name: docker build images of runtime
@@ -49,15 +55,18 @@ jobs:
           docker -v
       - name: Checkout code
         uses: actions/checkout@v1
+      - id: version
+        run: |
+          echo ::set-output name=version::$(echo ${GITHUB_REF:10})
       - name: docker login
         run: |
           docker login -u ${{ secrets.DOCKER_REGISTRY_ID }} -p ${{ secrets.DOCKER_REGISTRY_PASS }}
       - name: build and publish runtime image
         run: |
-          make runtime-image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/runtime' REGISTRY=baetyltechtest/
+          make runtime-image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/runtime' REGISTRY=baetyltechtest/ GIT_TAG=${{ steps.version.outputs.version }}
       - name: docker login internal
         run: |
           docker login hub.baidubce.com -u ${{ secrets.DOCKER_REGISTRY_ID_INTERNAL }} -p ${{ secrets.DOCKER_REGISTRY_PASS_INTERNAL }}
       - name: build and publish runtime image to internal storage
         run: |
-          make runtime-image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/runtime' REGISTRY=hub.baidubce.com/baetyl-test/
+          make runtime-image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/runtime' REGISTRY=hub.baidubce.com/baetyl-test/ GIT_TAG=${{ steps.version.outputs.version }}
