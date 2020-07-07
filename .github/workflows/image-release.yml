@@ -30,13 +30,13 @@ jobs:
           docker login -u ${{ secrets.DOCKER_REGISTRY_ID }} -p ${{ secrets.DOCKER_REGISTRY_PASS }}
       - name: build and publish baetyl-function image
         run: |
-          make image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/main' REGISTRY=baetyltechtest/ GIT_TAG=${{ steps.version.outputs.version }}
+          make image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/main' REGISTRY=baetyltech/ GIT_TAG=${{ steps.version.outputs.version }}
       - name: docker login internal
         run: |
           docker login hub.baidubce.com -u ${{ secrets.DOCKER_REGISTRY_ID_INTERNAL }} -p ${{ secrets.DOCKER_REGISTRY_PASS_INTERNAL }}
       - name: build and publish baetyl-function image to internal storage
         run: |
-          make image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/main' REGISTRY=hub.baidubce.com/baetyl-test/ GIT_TAG=${{ steps.version.outputs.version }}
+          make image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/main' REGISTRY=hub.baidubce.com/baetyl/ GIT_TAG=${{ steps.version.outputs.version }}
 
   runtime-image:
     name: docker build images of runtime
@@ -63,10 +63,10 @@ jobs:
           docker login -u ${{ secrets.DOCKER_REGISTRY_ID }} -p ${{ secrets.DOCKER_REGISTRY_PASS }}
       - name: build and publish runtime image
         run: |
-          make runtime-image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/runtime' REGISTRY=baetyltechtest/ GIT_TAG=${{ steps.version.outputs.version }}
+          make runtime-image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/runtime' REGISTRY=baetyltech/ GIT_TAG=${{ steps.version.outputs.version }}
       - name: docker login internal
         run: |
           docker login hub.baidubce.com -u ${{ secrets.DOCKER_REGISTRY_ID_INTERNAL }} -p ${{ secrets.DOCKER_REGISTRY_PASS_INTERNAL }}
       - name: build and publish runtime image to internal storage
         run: |
-          make runtime-image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/runtime' REGISTRY=hub.baidubce.com/baetyl-test/ GIT_TAG=${{ steps.version.outputs.version }}
+          make runtime-image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/runtime' REGISTRY=hub.baidubce.com/baetyl/ GIT_TAG=${{ steps.version.outputs.version }}
