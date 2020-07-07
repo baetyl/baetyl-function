@@ -41,10 +41,13 @@ image:
 	@docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 	docker buildx build $(XFLAGS) --platform $(XPLATFORMS) -t $(REGISTRY)$(MODULE):$(VERSION) -f Dockerfile .
 
-.PHONY: runtime-image
-runtime-image:
-	make -C node10 image
+.PHONY: python-image
+python-image:
 	make -C python36 image
+	
+.PHONY: node-image
+node-image:
+	make -C node10 image
 
 .PHONY: test
 test: fmt
