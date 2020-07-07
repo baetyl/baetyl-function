@@ -17,14 +17,29 @@ jobs:
           sudo apt update
           sudo apt install docker-ce
           docker -v
+      - name: Checkout code
+        uses: actions/checkout@v1
       - name: docker login
         run: |
           docker login -u ${{ secrets.DOCKER_REGISTRY_ID }} -p ${{ secrets.DOCKER_REGISTRY_PASS }}
-      - name: Checkout code
-        uses: actions/checkout@v1
       - name: build and publish runtime image
         run: |
           make runtime-image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/runtime' REGISTRY=baetyltechtest/
+      - name: docker login internal
+        run: |
+          docker login hub.baidubce.com -u ${{ secrets.DOCKER_REGISTRY_ID_INTERNAL }} -p ${{ secrets.DOCKER_REGISTRY_PASS_INTERNAL }}
+      - name: build and publish baetyl-function image to internal storage
+        run: |
+          make runtime-image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/runtime' REGISTRY=hub.baidubce.com/btl-test/
+      - name: docker login
+        run: |
+          docker login -u ${{ secrets.DOCKER_REGISTRY_ID }} -p ${{ secrets.DOCKER_REGISTRY_PASS }}
       - name: build and publish baetyl-function image
         run: |
-          make image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/runtime' REGISTRY=hub.baidubce.com/btl-test/
+          make image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/main' REGISTRY=baetyltechtest/
+      - name: docker login internal
+        run: |
+          docker login hub.baidubce.com -u ${{ secrets.DOCKER_REGISTRY_ID_INTERNAL }} -p ${{ secrets.DOCKER_REGISTRY_PASS_INTERNAL }}
+      - name: build and publish baetyl-function image to internal storage
+        run: |
+          make image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/main' REGISTRY=hub.baidubce.com/btl-test/
