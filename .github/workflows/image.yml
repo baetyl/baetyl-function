@@ -24,7 +24,7 @@ jobs:
           docker login -u ${{ secrets.DOCKER_REGISTRY_ID }} -p ${{ secrets.DOCKER_REGISTRY_PASS }}
       - name: build and publish baetyl-function image
         run: |
-          make image PLATFORMS=all XFLAGS='--push --cache-to=type=local,src=/tmp/main' REGISTRY=baetyltechtest/
+          make image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/main' REGISTRY=baetyltechtest/
       - name: docker login internal
         run: |
           docker login hub.baidubce.com -u ${{ secrets.DOCKER_REGISTRY_ID_INTERNAL }} -p ${{ secrets.DOCKER_REGISTRY_PASS_INTERNAL }}
