@@ -63,7 +63,7 @@ jobs:
           docker login hub.baidubce.com -u ${{ secrets.DOCKER_REGISTRY_ID_INTERNAL }} -p ${{ secrets.DOCKER_REGISTRY_PASS_INTERNAL }}
       - name: build and publish runtime image to internal storage
         run: |
-          make runtime-image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/python' REGISTRY=hub.baidubce.com/baetyl-test/
+          make python-image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/python' REGISTRY=hub.baidubce.com/baetyl-test/
 
   node-image:
       name: docker build images of node
