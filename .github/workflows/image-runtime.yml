@@ -1,4 +1,4 @@
-name: image
+name: image-runtime
 on: push
 
 jobs:
