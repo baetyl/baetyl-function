@@ -1,5 +1,8 @@
 name: image-develop
-on: push
+on:
+  push:
+    branches:
+      - master
 
 jobs:
   function-image:
