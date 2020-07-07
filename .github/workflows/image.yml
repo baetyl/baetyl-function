@@ -30,7 +30,7 @@ jobs:
           docker login hub.baidubce.com -u ${{ secrets.DOCKER_REGISTRY_ID_INTERNAL }} -p ${{ secrets.DOCKER_REGISTRY_PASS_INTERNAL }}
       - name: build and publish baetyl-function image to internal storage
         run: |
-          make image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/main' REGISTRY=hub.baidubce.com/btl-test/
+          make image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/main' REGISTRY=hub.baidubce.com/baetyl-test/
 
   runtime-image:
     name: docker build images of runtime
@@ -60,4 +60,4 @@ jobs:
           docker login hub.baidubce.com -u ${{ secrets.DOCKER_REGISTRY_ID_INTERNAL }} -p ${{ secrets.DOCKER_REGISTRY_PASS_INTERNAL }}
       - name: build and publish runtime image to internal storage
         run: |
-          make runtime-image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/runtime' REGISTRY=hub.baidubce.com/btl-test/
+          make runtime-image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/runtime' REGISTRY=hub.baidubce.com/baetyl-test/
