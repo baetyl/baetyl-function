@@ -31,12 +31,6 @@ jobs:
       - name: build and publish baetyl-function image
         run: |
           make image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/main' REGISTRY=baetyltech/ GIT_TAG=${{ steps.version.outputs.version }}
-      - name: docker login internal
-        run: |
-          docker login hub.baidubce.com -u ${{ secrets.DOCKER_REGISTRY_ID_INTERNAL }} -p ${{ secrets.DOCKER_REGISTRY_PASS_INTERNAL }}
-      - name: build and publish baetyl-function image to internal storage
-        run: |
-          make image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/main' REGISTRY=hub.baidubce.com/baetyl/ GIT_TAG=${{ steps.version.outputs.version }}
 
   python-image:
     name: docker build images of python
@@ -64,12 +58,6 @@ jobs:
       - name: build and publish python image
         run: |
           make python-image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/python' REGISTRY=baetyltech/ GIT_TAG=${{ steps.version.outputs.version }}
-      - name: docker login internal
-        run: |
-          docker login hub.baidubce.com -u ${{ secrets.DOCKER_REGISTRY_ID_INTERNAL }} -p ${{ secrets.DOCKER_REGISTRY_PASS_INTERNAL }}
-      - name: build and publish python image to internal storage
-        run: |
-          make python-image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/python' REGISTRY=hub.baidubce.com/baetyl/ GIT_TAG=${{ steps.version.outputs.version }}
 
   node-image:
     name: docker build images of node
@@ -97,9 +85,3 @@ jobs:
       - name: build and publish node image
         run: |
           make node-image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/node' REGISTRY=baetyltech/ GIT_TAG=${{ steps.version.outputs.version }}
-      - name: docker login internal
-        run: |
-          docker login hub.baidubce.com -u ${{ secrets.DOCKER_REGISTRY_ID_INTERNAL }} -p ${{ secrets.DOCKER_REGISTRY_PASS_INTERNAL }}
-      - name: build and publish runtime image to internal storage
-        run: |
-          make node-image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/node' REGISTRY=hub.baidubce.com/baetyl/ GIT_TAG=${{ steps.version.outputs.version }}
