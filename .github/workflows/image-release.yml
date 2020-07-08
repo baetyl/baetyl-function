@@ -22,15 +22,12 @@ jobs:
           docker -v
       - name: Checkout code
         uses: actions/checkout@v1
-      - id: version
-        run: |
-          echo ::set-output name=version::$(echo ${GITHUB_REF:10})
       - name: docker login
         run: |
           docker login -u ${{ secrets.DOCKER_REGISTRY_ID }} -p ${{ secrets.DOCKER_REGISTRY_PASS }}
       - name: build and publish baetyl-function image
         run: |
-          make image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/main' REGISTRY=baetyltech/ GIT_TAG=${{ steps.version.outputs.version }}
+          make image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/main' REGISTRY=baetyltech/
 
   python-image:
     name: docker build images of python
@@ -49,15 +46,12 @@ jobs:
           docker -v
       - name: Checkout code
         uses: actions/checkout@v1
-      - id: version
-        run: |
-          echo ::set-output name=version::$(echo ${GITHUB_REF:10})
       - name: docker login
         run: |
           docker login -u ${{ secrets.DOCKER_REGISTRY_ID }} -p ${{ secrets.DOCKER_REGISTRY_PASS }}
       - name: build and publish python image
         run: |
-          make python-image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/python' REGISTRY=baetyltech/ GIT_TAG=${{ steps.version.outputs.version }}
+          make python-image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/python' REGISTRY=baetyltech/
 
   node-image:
     name: docker build images of node
@@ -76,12 +70,9 @@ jobs:
           docker -v
       - name: Checkout code
         uses: actions/checkout@v1
-      - id: version
-        run: |
-          echo ::set-output name=version::$(echo ${GITHUB_REF:10})
       - name: docker login
         run: |
           docker login -u ${{ secrets.DOCKER_REGISTRY_ID }} -p ${{ secrets.DOCKER_REGISTRY_PASS }}
       - name: build and publish node image
         run: |
-          make node-image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/node' REGISTRY=baetyltech/ GIT_TAG=${{ steps.version.outputs.version }}
+          make node-image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/node' REGISTRY=baetyltech/
