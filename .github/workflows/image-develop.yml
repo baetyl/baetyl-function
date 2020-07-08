@@ -58,6 +58,10 @@ jobs:
       - name: build and publish python image
         run: |
           make python-image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/python' REGISTRY=baetyltechtest/
+      - uses: actions/upload-artifact@v1
+        with:
+          name: baetyl-amd64
+          path: /tmp/python
       - name: docker login internal
         run: |
           docker login hub.baidubce.com -u ${{ secrets.DOCKER_REGISTRY_ID_INTERNAL }} -p ${{ secrets.DOCKER_REGISTRY_PASS_INTERNAL }}
