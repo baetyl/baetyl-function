@@ -28,12 +28,6 @@ jobs:
       - name: build and publish baetyl-function image
         run: |
           make image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/main' REGISTRY=baetyltechtest/
-      - name: docker login internal
-        run: |
-          docker login hub.baidubce.com -u ${{ secrets.DOCKER_REGISTRY_ID_INTERNAL }} -p ${{ secrets.DOCKER_REGISTRY_PASS_INTERNAL }}
-      - name: build and publish baetyl-function image to internal storage
-        run: |
-          make image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/main' REGISTRY=hub.baidubce.com/baetyl-test/
 
   python-image:
     name: docker build images of python
@@ -58,12 +52,6 @@ jobs:
       - name: build and publish python image
         run: |
           make python-image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/python' REGISTRY=baetyltechtest/
-      - name: docker login internal
-        run: |
-          docker login hub.baidubce.com -u ${{ secrets.DOCKER_REGISTRY_ID_INTERNAL }} -p ${{ secrets.DOCKER_REGISTRY_PASS_INTERNAL }}
-      - name: build and publish runtime image to internal storage
-        run: |
-          make python-image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/python' REGISTRY=hub.baidubce.com/baetyl-test/
 
   node-image:
       name: docker build images of node
@@ -88,9 +76,3 @@ jobs:
         - name: build and publish node image
           run: |
             make node-image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/node' REGISTRY=baetyltechtest/
-        - name: docker login internal
-          run: |
-            docker login hub.baidubce.com -u ${{ secrets.DOCKER_REGISTRY_ID_INTERNAL }} -p ${{ secrets.DOCKER_REGISTRY_PASS_INTERNAL }}
-        - name: build and publish node image to internal storage
-          run: |
-            make node-image PLATFORMS=all XFLAGS='--push --cache-from=type=local,src=/tmp/node' REGISTRY=hub.baidubce.com/baetyl-test/
