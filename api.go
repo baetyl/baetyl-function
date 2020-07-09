@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	UserNamespace   = "baetyl-edge"
+	UserNamespace = "baetyl-edge"
 )
 
 type API struct {
