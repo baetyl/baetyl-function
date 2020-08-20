@@ -1,9 +1,10 @@
-package main
+package function
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -12,15 +13,21 @@ import (
 	"testing"
 	"time"
 
-	baetyl "github.com/baetyl/baetyl-go/faas"
+	baetyl "github.com/baetyl/baetyl-go/v2/faas"
+	"github.com/baetyl/baetyl-go/v2/utils"
 	"github.com/docker/distribution/uuid"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 func Test_FunctionInstance(t *testing.T) {
 	cmd, err := os.Getwd()
 	assert.NoError(t, err)
+
+	certPath := path.Join(cmd, "var/lib/baetyl/system/certs/")
+	initCert(t, certPath)
+	defer os.RemoveAll(path.Join(cmd, "var"))
 
 	tests := []struct {
 		name         string
@@ -35,19 +42,19 @@ func Test_FunctionInstance(t *testing.T) {
 			name:         "test python3 runtime",
 			_exec:        "python3",
 			functionName: "python3-sayhi",
-			codePath:     path.Join([]string{cmd, "testdata", "python3", "code"}...),
-			confFile:     path.Join([]string{cmd, "testdata", "python3", "config", "service.yml"}...),
+			codePath:     path.Join([]string{cmd, "..", "testdata", "python3", "code"}...),
+			confFile:     path.Join([]string{cmd, "..", "testdata", "python3", "config", "service.yml"}...),
 			address:      "127.0.0.1:51200",
-			runFile:      path.Join([]string{"python36", "runtime.py"}...),
+			runFile:      path.Join([]string{"..", "python36", "runtime.py"}...),
 		},
 		{
 			name:         "test node10 runtime",
 			_exec:        "node",
 			functionName: "node10-sayhi",
-			codePath:     path.Join([]string{cmd, "testdata", "node10", "code"}...),
-			confFile:     path.Join([]string{cmd, "testdata", "node10", "config", "service.yml"}...),
+			codePath:     path.Join([]string{cmd, "..", "testdata", "node10", "code"}...),
+			confFile:     path.Join([]string{cmd, "..", "testdata", "node10", "config", "service.yml"}...),
 			address:      "127.0.0.1:51201",
-			runFile:      path.Join([]string{"node10", "runtime.js"}...),
+			runFile:      path.Join([]string{"..", "node10", "runtime.js"}...),
 		},
 	}
 	for _, tt := range tests {
@@ -77,7 +84,11 @@ func Test_FunctionInstance(t *testing.T) {
 			)
 			assert.NoError(t, err)
 
-			cli, err := newMockFcClient(tt.address)
+			cli, err := newMockFcClient(tt.address, utils.Certificate{
+				CA:   path.Join(certPath, "ca.pem"),
+				Key:  path.Join(certPath, "clientKey.pem"),
+				Cert: path.Join(certPath, "clientCrt.pem"),
+			})
 			assert.NoError(t, err)
 			defer cli.Close()
 
@@ -99,7 +110,7 @@ func Test_FunctionInstance(t *testing.T) {
 				Payload: payload,
 			}
 
-			ctx1, cancel1 := context.WithTimeout(context.Background(), time.Minute)
+			ctx1, cancel1 := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel1()
 			resp1, err1 := cli.Call(ctx1, msg)
 			assert.NoError(t, err1)
@@ -135,7 +146,7 @@ func Test_FunctionInstance(t *testing.T) {
 				Payload: payload2,
 			}
 
-			ctx2, cancel2 := context.WithTimeout(context.Background(), time.Minute)
+			ctx2, cancel2 := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel2()
 			resp2, err2 := cli.Call(ctx2, msg2)
 			assert.NoError(t, err2)
@@ -171,7 +182,7 @@ func Test_FunctionInstance(t *testing.T) {
 				Payload: payload3,
 			}
 
-			ctx3, cancel3 := context.WithTimeout(context.Background(), time.Minute)
+			ctx3, cancel3 := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel3()
 			resp3, err3 := cli.Call(ctx3, msg3)
 			assert.NoError(t, err3)
@@ -196,7 +207,7 @@ func Test_FunctionInstance(t *testing.T) {
 				Payload: payload4,
 			}
 
-			ctx4, cancel4 := context.WithTimeout(context.Background(), time.Minute)
+			ctx4, cancel4 := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel4()
 			_, err4 := cli.Call(ctx4, msg4)
 			assert.Error(t, err4)
@@ -219,7 +230,7 @@ func Test_FunctionInstance(t *testing.T) {
 				Payload: payload5,
 			}
 
-			ctx5, cancel5 := context.WithTimeout(context.Background(), time.Minute)
+			ctx5, cancel5 := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel5()
 			_, err5 := cli.Call(ctx5, msg5)
 			assert.Error(t, err5)
@@ -242,7 +253,7 @@ func Test_FunctionInstance(t *testing.T) {
 				Payload: payload6,
 			}
 
-			ctx6, cancel6 := context.WithTimeout(context.Background(), time.Minute)
+			ctx6, cancel6 := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel6()
 			_, err6 := cli.Call(ctx6, msg6)
 			assert.NoError(t, err6)
@@ -264,7 +275,7 @@ func Test_FunctionInstance(t *testing.T) {
 				Payload: payload7,
 			}
 
-			ctx7, cancel7 := context.WithTimeout(context.Background(), time.Minute)
+			ctx7, cancel7 := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel7()
 			resp7, err7 := cli.Call(ctx7, msg7)
 			assert.NoError(t, err7)
@@ -294,10 +305,15 @@ type fcClient struct {
 	baetyl.FunctionClient
 }
 
-func newMockFcClient(address string) (*fcClient, error) {
+func newMockFcClient(address string, cert utils.Certificate) (*fcClient, error) {
+	tlsConfig, err := utils.NewTLSConfigClient(cert)
+	if err != nil {
+		return nil, err
+	}
+
 	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
 		grpc.WithBlock(),
-		grpc.WithInsecure(),
 	}
 
 	conn, err := grpc.Dial(address, opts...)
@@ -315,4 +331,87 @@ func (fc *fcClient) Close() {
 	if fc.conn != nil {
 		fc.conn.Close()
 	}
+}
+
+const (
+	ca = `-----BEGIN CERTIFICATE-----
+MIICfzCCAiSgAwIBAgIIFizowlvYkxgwCgYIKoZIzj0EAwIwgaUxCzAJBgNVBAYT
+AkNOMRAwDgYDVQQIEwdCZWlqaW5nMRkwFwYDVQQHExBIYWlkaWFuIERpc3RyaWN0
+MRUwEwYDVQQJEwxCYWlkdSBDYW1wdXMxDzANBgNVBBETBjEwMDA5MzEeMBwGA1UE
+ChMVTGludXggRm91bmRhdGlvbiBFZGdlMQ8wDQYDVQQLEwZCQUVUWUwxEDAOBgNV
+BAMTB3Jvb3QuY2EwIBcNMjAwODIwMDcxODA5WhgPMjA3MDA4MDgwNzE4MDlaMIGl
+MQswCQYDVQQGEwJDTjEQMA4GA1UECBMHQmVpamluZzEZMBcGA1UEBxMQSGFpZGlh
+biBEaXN0cmljdDEVMBMGA1UECRMMQmFpZHUgQ2FtcHVzMQ8wDQYDVQQREwYxMDAw
+OTMxHjAcBgNVBAoTFUxpbnV4IEZvdW5kYXRpb24gRWRnZTEPMA0GA1UECxMGQkFF
+VFlMMRAwDgYDVQQDEwdyb290LmNhMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE
+3GSIw55wTQIaVWSD2fePbIts9pToj9OtiyG0/1zlvkht1Go2yCGc0xwaoR0YdW1H
+Fi1jpzMfmvJhppQaz5F6F6M6MDgwDgYDVR0PAQH/BAQDAgGGMA8GA1UdEwEB/wQF
+MAMBAf8wFQYDVR0RBA4wDIcEAAAAAIcEfwAAATAKBggqhkjOPQQDAgNJADBGAiEA
+qaeTS1oKts1XiC6eWkuK0n6TH45yWJvC3/NU6PqpBSYCIQDIHGDb3OL+4OsUitvb
+svDCT14MNf0cgIeg7gO+D0Xvqg==
+-----END CERTIFICATE-----
+`
+	serverCrt = `-----BEGIN CERTIFICATE-----
+MIICojCCAkigAwIBAgIIFizowlwTTkAwCgYIKoZIzj0EAwIwgaUxCzAJBgNVBAYT
+AkNOMRAwDgYDVQQIEwdCZWlqaW5nMRkwFwYDVQQHExBIYWlkaWFuIERpc3RyaWN0
+MRUwEwYDVQQJEwxCYWlkdSBDYW1wdXMxDzANBgNVBBETBjEwMDA5MzEeMBwGA1UE
+ChMVTGludXggRm91bmRhdGlvbiBFZGdlMQ8wDQYDVQQLEwZCQUVUWUwxEDAOBgNV
+BAMTB3Jvb3QuY2EwHhcNMjAwODIwMDcxODA5WhcNNDAwODE1MDcxODA5WjCBpDEL
+MAkGA1UEBhMCQ04xEDAOBgNVBAgTB0JlaWppbmcxGTAXBgNVBAcTEEhhaWRpYW4g
+RGlzdHJpY3QxFTATBgNVBAkTDEJhaWR1IENhbXB1czEPMA0GA1UEERMGMTAwMDkz
+MR4wHAYDVQQKExVMaW51eCBGb3VuZGF0aW9uIEVkZ2UxDzANBgNVBAsTBkJBRVRZ
+TDEPMA0GA1UEAxMGc2VydmVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEQXCQ
+TGn4+frJYOumFk8gs8BIbgduEuiHonhYdJTFGIPLiOqPQoIvDmICod7W0oIzYYXw
+TF4NfadliSryoXx9IaNhMF8wDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQWMBQGCCsG
+AQUFBwMCBggrBgEFBQcDATAMBgNVHRMBAf8EAjAAMCAGA1UdEQQZMBeCCWxvY2Fs
+aG9zdIcEAAAAAIcEfwAAATAKBggqhkjOPQQDAgNIADBFAiB5vz8+oob7SkN54uf7
+RErbE4tWT5AHtgBgIs3A+TjnyQIhAPvnL8W1dq4qdkVr0eiH5He0xNHdsQc6eWxS
+RcKyjhh1
+-----END CERTIFICATE-----
+`
+	serverKey = `-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIPcuJ/l+/s8PXvAN5M6VNBZrKD4HDW6n6Y4rQCYinF5doAoGCCqGSM49
+AwEHoUQDQgAEQXCQTGn4+frJYOumFk8gs8BIbgduEuiHonhYdJTFGIPLiOqPQoIv
+DmICod7W0oIzYYXwTF4NfadliSryoXx9IQ==
+-----END EC PRIVATE KEY-----
+`
+	clientCrt = `-----BEGIN CERTIFICATE-----
+MIIClzCCAj2gAwIBAgIIFizowlwFTFAwCgYIKoZIzj0EAwIwgaUxCzAJBgNVBAYT
+AkNOMRAwDgYDVQQIEwdCZWlqaW5nMRkwFwYDVQQHExBIYWlkaWFuIERpc3RyaWN0
+MRUwEwYDVQQJEwxCYWlkdSBDYW1wdXMxDzANBgNVBBETBjEwMDA5MzEeMBwGA1UE
+ChMVTGludXggRm91bmRhdGlvbiBFZGdlMQ8wDQYDVQQLEwZCQUVUWUwxEDAOBgNV
+BAMTB3Jvb3QuY2EwHhcNMjAwODIwMDcxODA5WhcNNDAwODE1MDcxODA5WjCBpDEL
+MAkGA1UEBhMCQ04xEDAOBgNVBAgTB0JlaWppbmcxGTAXBgNVBAcTEEhhaWRpYW4g
+RGlzdHJpY3QxFTATBgNVBAkTDEJhaWR1IENhbXB1czEPMA0GA1UEERMGMTAwMDkz
+MR4wHAYDVQQKExVMaW51eCBGb3VuZGF0aW9uIEVkZ2UxDzANBgNVBAsTBkJBRVRZ
+TDEPMA0GA1UEAxMGY2xpZW50MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAErp2K
+LVIYfqeCzJlR/gteIZyN7i1/ckXuuXNO1i2GGu/bFdkoj1ST1ypj1FuY/WpdmwSQ
+HBIVm42s1vf0Gnc7yKNWMFQwDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQWMBQGCCsG
+AQUFBwMCBggrBgEFBQcDATAMBgNVHRMBAf8EAjAAMBUGA1UdEQQOMAyHBAAAAACH
+BH8AAAEwCgYIKoZIzj0EAwIDSAAwRQIgOVxan95heTLe3c20iUvPJmX1EPMvfg6J
+5GeWeK2cA8QCIQCfO6xOoQj386u+7XD4K4srGdFj77f9tfWt/M6ryIscdA==
+-----END CERTIFICATE-----
+`
+	clientKey = `-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIAwqz3MtAG2O5xaKy2RXWLxcOpKYKWilCs89L27+6it1oAoGCCqGSM49
+AwEHoUQDQgAErp2KLVIYfqeCzJlR/gteIZyN7i1/ckXuuXNO1i2GGu/bFdkoj1ST
+1ypj1FuY/WpdmwSQHBIVm42s1vf0Gnc7yA==
+-----END EC PRIVATE KEY-----
+`
+)
+
+func initCert(t *testing.T, certDir string) {
+	err := os.MkdirAll(certDir, 0755)
+	assert.NoError(t, err)
+
+	err = ioutil.WriteFile(path.Join(certDir, "ca.pem"), []byte(ca), os.ModePerm)
+	assert.NoError(t, err)
+	err = ioutil.WriteFile(path.Join(certDir, "crt.pem"), []byte(serverCrt), os.ModePerm)
+	assert.NoError(t, err)
+	err = ioutil.WriteFile(path.Join(certDir, "key.pem"), []byte(serverKey), os.ModePerm)
+	assert.NoError(t, err)
+	err = ioutil.WriteFile(path.Join(certDir, "clientCrt.pem"), []byte(clientCrt), os.ModePerm)
+	assert.NoError(t, err)
+	err = ioutil.WriteFile(path.Join(certDir, "clientKey.pem"), []byte(clientKey), os.ModePerm)
+	assert.NoError(t, err)
 }

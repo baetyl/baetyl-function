@@ -1,4 +1,4 @@
-package main
+package function
 
 import (
 	"context"
@@ -6,24 +6,22 @@ import (
 	"net/http"
 	"strings"
 
-	baetyl "github.com/baetyl/baetyl-go/faas"
-	baetylhttp "github.com/baetyl/baetyl-go/http"
-	"github.com/baetyl/baetyl-go/log"
+	baetyl "github.com/baetyl/baetyl-go/v2/faas"
+	baetylhttp "github.com/baetyl/baetyl-go/v2/http"
+	"github.com/baetyl/baetyl-go/v2/log"
+	"github.com/baetyl/baetyl-go/v2/utils"
 	"github.com/docker/distribution/uuid"
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
 )
 
-const (
-	UserNamespace = "baetyl-edge"
-)
-
 type API struct {
-	log       *log.Logger
 	cfg       *Config
+	ns        string
 	svr       *baetylhttp.Server
 	manager   Manager
 	endpoints []Endpoint
+	log       *log.Logger
 }
 
 type Endpoint struct {
@@ -32,19 +30,25 @@ type Endpoint struct {
 	Handler func(c *routing.Context) error
 }
 
-func NewAPI(cfg Config) *API {
-	m := NewManager(cfg.Client)
+func NewAPI(cfg Config, edgeNamespace string, cert utils.Certificate) (*API, error) {
+	m, err := NewManager(cfg.Client, cert)
+	if err != nil {
+		return nil, err
+	}
+
 	api := &API{
-		log:     log.With(log.Any("main", "api")),
 		cfg:     &cfg,
+		ns:      edgeNamespace,
 		manager: m,
+		log:     log.With(log.Any("main", "api")),
 	}
 	api.endpoints = append(api.endpoints, api.proxyEndpoints()...)
 
 	handler := api.useRouter()
+	cfg.Server.ServerConfig.Certificate = cert
 	api.svr = baetylhttp.NewServer(cfg.Server.ServerConfig, handler)
 	api.svr.Start()
-	return api
+	return api, nil
 }
 
 // Close closes api
@@ -105,7 +109,7 @@ func (a *API) onHttpMessage(c *routing.Context) error {
 func (a *API) onServiceMessage(c *routing.Context) error {
 	uri := c.Request.URI()
 	serviceName := c.Param("service")
-	uri.SetHost(fmt.Sprintf("%s.%s", serviceName, UserNamespace))
+	uri.SetHost(fmt.Sprintf("%s.%s", serviceName, a.ns))
 	uri.SetPathBytes(uri.Path()[len(serviceName)+1:])
 
 	req := fasthttp.AcquireRequest()
@@ -142,7 +146,7 @@ func (a *API) onFunctionMessage(c *routing.Context) error {
 		Metadata: metedata,
 	}
 
-	address := fmt.Sprintf("%s.%s:%d", serviceName, UserNamespace, a.cfg.Client.Grpc.Port)
+	address := fmt.Sprintf("%s.%s:%d", serviceName, a.ns, a.cfg.Client.Grpc.Port)
 	conn, err := a.manager.GetGRPCConnection(address, false)
 	if err != nil {
 		respondError(c, 500, "ERR_FUNCTION_GRPC", err.Error())

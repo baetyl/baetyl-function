@@ -80,7 +80,10 @@ const getFunctions = s => {
 
 const getGrpcServer = s => {
     let config = {
-        'address': s.serverAddress
+        'address': s.serverAddress,
+        'ca': s.cert['ca'],
+        'key': s.cert['key'],
+        'cert': s.cert['cert'],
     }
 
     if (hasAttr(s.config, 'server')) {
@@ -122,10 +125,21 @@ class NodeRuntimeModule {
         this.name = 'baetyl-node10';
         this.confPath = '/etc/baetyl/service.yml';
         this.codePath = '/var/lib/baetyl/code';
-        this.serverAddress = "0.0.0.0:80"
+        this.serverAddress = "0.0.0.0:80";
+        this.cert = {
+            'ca': 'var/lib/baetyl/system/certs/ca.pem',
+            'key': 'var/lib/baetyl/system/certs/key.pem',
+            'cert': 'var/lib/baetyl/system/certs/crt.pem',
+        };
     }
 
     Load() {
+        if (!(fs.existsSync(this.cert['ca'])
+            && fs.existsSync(this.cert['key'])
+            && fs.existsSync(this.cert['cert']))) {
+            throw new Error("system certificate is not found");
+        }
+
         if (hasAttr(process.env, 'BAETYL_SERVICE_NAME')) {
             this.name = process.env['BAETYL_SERVICE_NAME']
         } 
