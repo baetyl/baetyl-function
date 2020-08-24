@@ -29,14 +29,24 @@ class mo(function_pb2_grpc.FunctionServicer):
 
     def __init__(self):
         self.name = 'baetyl-python36'
-        self.conf_path = '/etc/baetyl/service.yml'
+        self.conf_path = '/etc/baetyl/conf.yml'
         self.code_path = '/var/lib/baetyl/code'
         self.server_address = "0.0.0.0:80"
+        self.cert = {
+            'ca': 'var/lib/baetyl/system/certs/ca.pem',
+            'key': 'var/lib/baetyl/system/certs/key.pem',
+            'cert': 'var/lib/baetyl/system/certs/crt.pem',
+        }
 
     def Load(self):
         """
         load config and init module
         """
+        if not (os.path.exists(self.cert['ca'])
+            and os.path.exists(self.cert['key'])
+            and os.path.exists(self.cert['cert'])):
+            raise Exception("system certificate is not found")
+
         if 'BAETYL_SERVICE_NAME' in os.environ:
             self.name = os.environ['BAETYL_SERVICE_NAME']
 
@@ -72,8 +82,9 @@ class mo(function_pb2_grpc.FunctionServicer):
         close module
         """
         grace = None
-        if 'timeout' in self.config['server']:
-            grace = self.config['server']['timeout'] / 1e9
+        if 'server' in self.config:
+            if 'timeout' in self.config['server']:
+                grace = self.config['server']['timeout'] / 1e9
         self.server.stop(grace)
         self.log.info("service closed")
 
@@ -83,6 +94,9 @@ class mo(function_pb2_grpc.FunctionServicer):
         """
         function = request.Metadata['functionName']
         if function == "":
+            if len(self.functions) < 1:
+                self.log.error("no functions exist")
+                raise Exception("no functions exist")
             function = list(self.functions.keys())[0]
 
         if function not in self.functions:
@@ -144,7 +158,10 @@ def get_grpc_server(s):
     """
 
     c = {
-        'address': s.server_address
+        'address': s.server_address,
+        'ca': s.cert['ca'],
+        'key': s.cert['key'],
+        'cert': s.cert['cert'],
     }
     if 'server' in s.config:
         c = s.config['server']
@@ -176,17 +193,17 @@ def get_grpc_server(s):
         with open(c['cert'], 'rb') as f:
             ssl_cert = f.read()
 
-    s = grpc.server(thread_pool=futures.ThreadPoolExecutor(max_workers=max_workers),
+    server = grpc.server(thread_pool=futures.ThreadPoolExecutor(max_workers=max_workers),
                     options=[('grpc.max_send_message_length', max_message_length),
                              ('grpc.max_receive_message_length', max_message_length)],
                     maximum_concurrent_rpcs=max_concurrent)
     if ssl_key is not None and ssl_cert is not None:
         credentials = grpc.ssl_server_credentials(
             ((ssl_key, ssl_cert),), ssl_ca, ssl_ca is not None)
-        s.add_secure_port(c['address'], credentials)
+        server.add_secure_port(c['address'], credentials)
     else:
-        s.add_insecure_port(c['address'])
-    return s
+        server.add_insecure_port(c['address'])
+    return server
 
 
 def get_logger(c):
