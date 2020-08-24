@@ -1,29 +1,29 @@
-package main
+package function
 
 import (
 	"context"
 	"fmt"
+	context2 "github.com/baetyl/baetyl-go/v2/context"
 	"net/http"
 	"strings"
 
-	baetyl "github.com/baetyl/baetyl-go/faas"
-	baetylhttp "github.com/baetyl/baetyl-go/http"
-	"github.com/baetyl/baetyl-go/log"
+	baetyl "github.com/baetyl/baetyl-go/v2/faas"
+	baetylhttp "github.com/baetyl/baetyl-go/v2/http"
+	"github.com/baetyl/baetyl-go/v2/log"
 	"github.com/docker/distribution/uuid"
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
 )
 
-const (
-	UserNamespace = "baetyl-edge"
-)
-
 type API struct {
-	log       *log.Logger
 	cfg       *Config
+	ctx       context2.Context
 	svr       *baetylhttp.Server
 	manager   Manager
 	endpoints []Endpoint
+	functionHost string
+	serviceHost string
+	log       *log.Logger
 }
 
 type Endpoint struct {
@@ -32,19 +32,29 @@ type Endpoint struct {
 	Handler func(c *routing.Context) error
 }
 
-func NewAPI(cfg Config) *API {
-	m := NewManager(cfg.Client)
+func NewAPI(cfg Config, ctx context2.Context) (*API, error) {
+	cert := ctx.SystemConfig().Certificate
+	m, err := NewManager(cfg.Client, cert)
+	if err != nil {
+		return nil, err
+	}
+
 	api := &API{
-		log:     log.With(log.Any("main", "api")),
 		cfg:     &cfg,
+		ctx:     ctx,
 		manager: m,
+		functionHost: fmt.Sprintf("%s:%s", cfg.Server.Host.Function, ctx.FunctionHttpPort()),
+		serviceHost: fmt.Sprintf("%s:%s", cfg.Server.Host.Service, ctx.FunctionHttpPort()),
+		log:     log.With(log.Any("function", "api")),
 	}
 	api.endpoints = append(api.endpoints, api.proxyEndpoints()...)
 
 	handler := api.useRouter()
+	cfg.Server.ServerConfig.Address = ":" + ctx.FunctionHttpPort()
+	cfg.Server.ServerConfig.Certificate = cert
 	api.svr = baetylhttp.NewServer(cfg.Server.ServerConfig, handler)
 	api.svr.Start()
-	return api
+	return api, nil
 }
 
 // Close closes api
@@ -92,9 +102,9 @@ func (a *API) onHttpMessage(c *routing.Context) error {
 	service := c.Param("service")
 	if service != "" {
 		switch string(c.Host()) {
-		case a.cfg.Server.Host.Function:
+		case a.functionHost:
 			return a.onFunctionMessage(c)
-		case a.cfg.Server.Host.Service:
+		case a.serviceHost:
 			return a.onServiceMessage(c)
 		}
 	}
@@ -105,7 +115,7 @@ func (a *API) onHttpMessage(c *routing.Context) error {
 func (a *API) onServiceMessage(c *routing.Context) error {
 	uri := c.Request.URI()
 	serviceName := c.Param("service")
-	uri.SetHost(fmt.Sprintf("%s.%s", serviceName, UserNamespace))
+	uri.SetHost(fmt.Sprintf("%s.%s", serviceName, a.ctx.EdgeNamespace()))
 	uri.SetPathBytes(uri.Path()[len(serviceName)+1:])
 
 	req := fasthttp.AcquireRequest()
@@ -142,7 +152,8 @@ func (a *API) onFunctionMessage(c *routing.Context) error {
 		Metadata: metedata,
 	}
 
-	address := fmt.Sprintf("%s.%s:%d", serviceName, UserNamespace, a.cfg.Client.Grpc.Port)
+	address := fmt.Sprintf("%s.%s:%d", serviceName, a.ctx.EdgeNamespace(), a.cfg.Client.Grpc.Port)
+	fmt.Println("address: ", address)
 	conn, err := a.manager.GetGRPCConnection(address, false)
 	if err != nil {
 		respondError(c, 500, "ERR_FUNCTION_GRPC", err.Error())

@@ -1,8 +1,9 @@
-package main
+package function
 
 import (
-	"github.com/baetyl/baetyl-go/http"
 	"time"
+
+	"github.com/baetyl/baetyl-go/v2/http"
 )
 
 // Config
