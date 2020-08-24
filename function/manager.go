@@ -1,13 +1,15 @@
-package main
+package function
 
 import (
 	"crypto/tls"
 	"io"
 	"sync"
 
-	"github.com/baetyl/baetyl-go/log"
+	"github.com/baetyl/baetyl-go/v2/log"
+	"github.com/baetyl/baetyl-go/v2/utils"
 	"github.com/valyala/fasthttp"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // Manager Manager
@@ -20,17 +22,22 @@ type Manager interface {
 type manager struct {
 	log            *log.Logger
 	cfg            *ClientConfig
+	tlsConfig      *tls.Config
 	lock           *sync.Mutex
 	httpClient     *fasthttp.Client
 	connectionPool map[string]*grpc.ClientConn
 }
 
 // NewGRPCManager
-func NewManager(cfg ClientConfig) Manager {
+func NewManager(cfg ClientConfig, cert utils.Certificate) (Manager, error) {
+	tlsConfig, err := utils.NewTLSConfigClient(cert)
+	if err != nil {
+		return nil, err
+	}
+
 	httpClient := &fasthttp.Client{
-		MaxConnsPerHost: cfg.Http.MaxConnsPerHost,
-		// TODO: support tls
-		TLSConfig:                 &tls.Config{InsecureSkipVerify: true},
+		MaxConnsPerHost:           cfg.Http.MaxConnsPerHost,
+		TLSConfig:                 tlsConfig,
 		ReadTimeout:               cfg.Http.ReadTimeout,
 		MaxIdemponentCallAttempts: cfg.Http.MaxIdemponentCallAttempts,
 		MaxConnDuration:           cfg.Http.MaxConnDuration,
@@ -38,10 +45,11 @@ func NewManager(cfg ClientConfig) Manager {
 	return &manager{
 		log:            log.With(log.Any("main", "manager")),
 		cfg:            &cfg,
+		tlsConfig:      tlsConfig,
 		lock:           &sync.Mutex{},
 		httpClient:     httpClient,
 		connectionPool: map[string]*grpc.ClientConn{},
-	}
+	}, nil
 }
 
 // GetGRPCConnection returns a new grpc connection for a given address and inits one if doesn't exist
@@ -57,8 +65,7 @@ func (g *manager) GetGRPCConnection(address string, recreateIfExists bool) (*grp
 	}
 
 	opts := []grpc.DialOption{
-		// TODO: tls support
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(credentials.NewTLS(g.tlsConfig)),
 	}
 
 	conn, err := grpc.Dial(address, opts...)
