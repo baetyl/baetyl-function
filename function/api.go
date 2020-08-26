@@ -3,10 +3,10 @@ package function
 import (
 	"context"
 	"fmt"
-	context2 "github.com/baetyl/baetyl-go/v2/context"
 	"net/http"
 	"strings"
 
+	context2 "github.com/baetyl/baetyl-go/v2/context"
 	baetyl "github.com/baetyl/baetyl-go/v2/faas"
 	baetylhttp "github.com/baetyl/baetyl-go/v2/http"
 	"github.com/baetyl/baetyl-go/v2/log"
@@ -15,15 +15,16 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+var edgeNamespace = "baetyl-edge"
+
 type API struct {
-	cfg       *Config
-	ctx       context2.Context
-	svr       *baetylhttp.Server
-	manager   Manager
-	endpoints []Endpoint
+	cfg          *Config
+	svr          *baetylhttp.Server
+	manager      Manager
+	endpoints    []Endpoint
 	functionHost string
-	serviceHost string
-	log       *log.Logger
+	serviceHost  string
+	log          *log.Logger
 }
 
 type Endpoint struct {
@@ -40,12 +41,11 @@ func NewAPI(cfg Config, ctx context2.Context) (*API, error) {
 	}
 
 	api := &API{
-		cfg:     &cfg,
-		ctx:     ctx,
-		manager: m,
+		cfg:          &cfg,
+		manager:      m,
 		functionHost: fmt.Sprintf("%s:%s", cfg.Server.Host.Function, ctx.FunctionHttpPort()),
-		serviceHost: fmt.Sprintf("%s:%s", cfg.Server.Host.Service, ctx.FunctionHttpPort()),
-		log:     log.With(log.Any("function", "api")),
+		serviceHost:  fmt.Sprintf("%s:%s", cfg.Server.Host.Service, ctx.FunctionHttpPort()),
+		log:          log.With(log.Any("function", "api")),
 	}
 	api.endpoints = append(api.endpoints, api.proxyEndpoints()...)
 
@@ -115,7 +115,7 @@ func (a *API) onHttpMessage(c *routing.Context) error {
 func (a *API) onServiceMessage(c *routing.Context) error {
 	uri := c.Request.URI()
 	serviceName := c.Param("service")
-	uri.SetHost(fmt.Sprintf("%s.%s", serviceName, a.ctx.EdgeNamespace()))
+	uri.SetHost(fmt.Sprintf("%s.%s", serviceName, edgeNamespace))
 	uri.SetPathBytes(uri.Path()[len(serviceName)+1:])
 
 	req := fasthttp.AcquireRequest()
@@ -152,7 +152,7 @@ func (a *API) onFunctionMessage(c *routing.Context) error {
 		Metadata: metedata,
 	}
 
-	address := fmt.Sprintf("%s.%s:%d", serviceName, a.ctx.EdgeNamespace(), a.cfg.Client.Grpc.Port)
+	address := fmt.Sprintf("%s.%s:%d", serviceName, edgeNamespace, a.cfg.Client.Grpc.Port)
 	conn, err := a.manager.GetGRPCConnection(address, false)
 	if err != nil {
 		respondError(c, 500, "ERR_FUNCTION_GRPC", err.Error())
