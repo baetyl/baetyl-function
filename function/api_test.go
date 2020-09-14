@@ -18,6 +18,7 @@ import (
 	"github.com/baetyl/baetyl-go/v2/http"
 	"github.com/baetyl/baetyl-go/v2/log"
 	"github.com/baetyl/baetyl-go/v2/mqtt"
+	"github.com/baetyl/baetyl-go/v2/native"
 	"github.com/baetyl/baetyl-go/v2/utils"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
@@ -63,15 +64,15 @@ func TestServerNativeNormal(t *testing.T) {
 
 	ports, err := getFreePorts(3)
 
-	mapping := resolve.ServiceMapping{
-		Services: map[string]resolve.ServiceMappingInfo{
+	mapping := native.ServiceMapping{
+		Services: map[string]native.ServiceMappingInfo{
 			"serviceA": {
-				Ports: &resolve.PortsInfo{
+				Ports: native.PortsInfo{
 					Items: ports[:1],
 				},
 			},
 			"serviceB": {
-				Ports: &resolve.PortsInfo{
+				Ports: native.PortsInfo{
 					Items: ports[1:2],
 				},
 			},
@@ -81,7 +82,7 @@ func TestServerNativeNormal(t *testing.T) {
 	data, err := yaml.Marshal(mapping)
 	assert.NoError(t, err)
 
-	portMappingFile := path.Join(cmd, "var/lib/baetyl/run/services.yml")
+	portMappingFile := path.Join(cmd, native.ServiceMappingFile)
 	err = os.MkdirAll(path.Dir(portMappingFile), 0755)
 	assert.NoError(t, err)
 
@@ -140,8 +141,8 @@ func TestServerNativeNormal(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, string(respData), fmt.Sprintf("{\"port\":%d}", ports[1]))
 
-	mapping.Services["serviceA"] = resolve.ServiceMappingInfo{
-		Ports: &resolve.PortsInfo{
+	mapping.Services["serviceA"] = native.ServiceMappingInfo{
+		Ports: native.PortsInfo{
 			Items: ports[2:3],
 		},
 	}
