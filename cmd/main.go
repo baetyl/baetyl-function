@@ -21,7 +21,7 @@ func main() {
 		}
 
 		var resolver resolve.Resolver
-		switch ctx.RunMode() {
+		switch context.RunMode() {
 		case context.RunModeKube:
 			resolver, err = resolve.NewKubeResolver(ctx)
 			if err != nil {
@@ -33,7 +33,7 @@ func main() {
 				return err
 			}
 		default:
-			return errors.Errorf("Run mode (%s) is not supported.", ctx.RunMode())
+			return errors.Errorf("Run mode (%s) is not supported.", context.RunMode())
 		}
 
 		api, err := function.NewAPI(cfg, ctx, resolver)

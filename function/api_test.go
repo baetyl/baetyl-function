@@ -69,7 +69,7 @@ func TestServerNativeNormal(t *testing.T) {
 	data, err := yaml.Marshal(mapping)
 	assert.NoError(t, err)
 
-	portMappingFile := path.Join(cmd, "var/lib/baetyl/share/ports.json")
+	portMappingFile := path.Join(cmd, "var/lib/baetyl/run/services.yml")
 	err = os.MkdirAll(path.Dir(portMappingFile), 0755)
 	assert.NoError(t, err)
 

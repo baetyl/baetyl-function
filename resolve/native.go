@@ -15,7 +15,7 @@ import (
 
 const (
 	// TODO: remove to baetyl-go and exposed by a method
-	portsFile = "var/lib/baetyl/share/ports.json"
+	portsFile = "var/lib/baetyl/run/services.yml"
 )
 
 type Mapping struct {
