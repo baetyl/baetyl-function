@@ -15,11 +15,15 @@ import (
 
 const (
 	// TODO: remove to baetyl-go and exposed by a method
-	portsFile = "var/lib/baetyl/run/services.yml"
+	serviceMappingFile = "var/lib/baetyl/run/services.yml"
 )
 
-type Mapping struct {
-	Ports map[string]PortsInfo `yaml:"ports,omitempty"`
+type ServiceMapping struct {
+	Services map[string]ServiceMappingInfo `yaml:"services,omitempty"`
+}
+
+type ServiceMappingInfo struct {
+	Ports *PortsInfo `yaml:"ports,omitempty"`
 }
 
 type PortsInfo struct {
@@ -29,7 +33,7 @@ type PortsInfo struct {
 
 type NativeResolver struct {
 	watcher *fsnotify.Watcher
-	mapping *Mapping
+	mapping *ServiceMapping
 	log     *log.Logger
 	sync.RWMutex
 }
@@ -48,7 +52,7 @@ func (i *PortsInfo) Next() (int, error) {
 
 func NewNativeResolver(_ context.Context) (Resolver, error) {
 	resolver := &NativeResolver{
-		mapping: new(Mapping),
+		mapping: new(ServiceMapping),
 		log:     log.With(log.Any("resolve", "native")),
 	}
 
@@ -91,7 +95,7 @@ func NewNativeResolver(_ context.Context) (Resolver, error) {
 		}
 	}()
 
-	err = watcher.Add(portsFile)
+	err = watcher.Add(serviceMappingFile)
 	if err != nil {
 		return nil, err
 	}
@@ -104,10 +108,10 @@ func (n *NativeResolver) LoadMapping() error {
 	n.Lock()
 	defer n.Unlock()
 
-	if !utils.FileExists(portsFile) {
-		return errors.Errorf("ports mapping file (%s) doesn't exist", portsFile)
+	if !utils.FileExists(serviceMappingFile) {
+		return errors.Errorf("services mapping file (%s) doesn't exist", serviceMappingFile)
 	}
-	data, err := ioutil.ReadFile(portsFile)
+	data, err := ioutil.ReadFile(serviceMappingFile)
 	if err != nil {
 		return err
 	}
@@ -122,11 +126,15 @@ func (n *NativeResolver) Resolve(service string) (address string, err error) {
 	n.Lock()
 	defer n.Unlock()
 
-	portsInfo, ok := n.mapping.Ports[service]
+	serviceInfo, ok := n.mapping.Services[service]
 	if !ok {
-		return "", errors.New("no such service in ports mapping file")
+		return "", errors.New("no such service in services mapping file")
 	}
-	port, err := portsInfo.Next()
+	if serviceInfo.Ports == nil || len(serviceInfo.Ports.Items) == 0{
+		return "", errors.New("no ports info in services mapping file")
+	}
+
+	port, err := serviceInfo.Ports.Next()
 	if err != nil {
 		return "", err
 	}

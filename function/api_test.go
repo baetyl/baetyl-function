@@ -62,10 +62,22 @@ func TestServerNativeNormal(t *testing.T) {
 	}
 
 	ports, err := getFreePorts(3)
-	mapping := resolve.Mapping{Ports: map[string]resolve.PortsInfo{
-		"serviceA": {Items: ports[:1]},
-		"serviceB": {Items: ports[1:2]},
-	}}
+
+	mapping := resolve.ServiceMapping{
+		Services: map[string]resolve.ServiceMappingInfo{
+			"serviceA": {
+				Ports: &resolve.PortsInfo{
+					Items: ports[:1],
+				},
+			},
+			"serviceB": {
+				Ports: &resolve.PortsInfo{
+					Items: ports[1:2],
+				},
+			},
+		},
+	}
+
 	data, err := yaml.Marshal(mapping)
 	assert.NoError(t, err)
 
@@ -128,7 +140,11 @@ func TestServerNativeNormal(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, string(respData), fmt.Sprintf("{\"port\":%d}", ports[1]))
 
-	mapping.Ports["serviceA"] = resolve.PortsInfo{Items: ports[2:3]}
+	mapping.Services["serviceA"] = resolve.ServiceMappingInfo{
+		Ports: &resolve.PortsInfo{
+			Items: ports[2:3],
+		},
+	}
 
 	data, err = yaml.Marshal(mapping)
 	assert.NoError(t, err)
