@@ -3,7 +3,7 @@ module github.com/baetyl/baetyl-function/v2
 go 1.13
 
 require (
-	github.com/baetyl/baetyl-go/v2 v2.0.43
+	github.com/baetyl/baetyl-go/v2 v2.0.44
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/golang/protobuf v1.3.5 // indirect

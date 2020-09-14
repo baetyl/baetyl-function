@@ -20,7 +20,7 @@ type NativeResolver struct {
 
 func NewNativeResolver(_ context.Context) (Resolver, error) {
 	resolver := &NativeResolver{
-		mapping: new(native.ServiceMapping),
+		mapping: native.NewServiceMapping(),
 		log:     log.With(log.Any("resolve", "native")),
 	}
 
@@ -49,10 +49,12 @@ func NewNativeResolver(_ context.Context) (Resolver, error) {
 				}
 
 				resolver.log.Debug("load ports mapping file again", log.Error(err))
+				resolver.Lock()
 				err = resolver.mapping.Load()
 				if err != nil {
 					resolver.log.Warn("load ports mapping file failed", log.Error(err))
 				}
+				resolver.Unlock()
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					resolver.log.Warn("error when wait on the events channel")
@@ -80,7 +82,7 @@ func (n *NativeResolver) Resolve(service string) (address string, err error) {
 	if !ok {
 		return "", errors.New("no such service in services mapping file")
 	}
-	if len(serviceInfo.Ports.Items) == 0{
+	if len(serviceInfo.Ports.Items) == 0 {
 		return "", errors.New("no ports info in services mapping file")
 	}
 
