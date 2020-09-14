@@ -2,61 +2,29 @@ package resolve
 
 import (
 	"fmt"
-	"io/ioutil"
 	"sync"
 
 	"github.com/baetyl/baetyl-go/v2/context"
 	"github.com/baetyl/baetyl-go/v2/errors"
 	"github.com/baetyl/baetyl-go/v2/log"
-	"github.com/baetyl/baetyl-go/v2/utils"
+	"github.com/baetyl/baetyl-go/v2/native"
 	"github.com/fsnotify/fsnotify"
-	"gopkg.in/yaml.v2"
 )
-
-const (
-	// TODO: remove to baetyl-go and exposed by a method
-	serviceMappingFile = "var/lib/baetyl/run/services.yml"
-)
-
-type ServiceMapping struct {
-	Services map[string]ServiceMappingInfo `yaml:"services,omitempty"`
-}
-
-type ServiceMappingInfo struct {
-	Ports *PortsInfo `yaml:"ports,omitempty"`
-}
-
-type PortsInfo struct {
-	Items  []int `yaml:"items,omitempty"`
-	offset int
-}
 
 type NativeResolver struct {
 	watcher *fsnotify.Watcher
-	mapping *ServiceMapping
+	mapping *native.ServiceMapping
 	log     *log.Logger
 	sync.RWMutex
 }
 
-func (i *PortsInfo) Next() (int, error) {
-	if len(i.Items) == 0 {
-		return 0, errors.New("ports of service are empty in ports mapping file")
-	}
-	port := i.Items[i.offset]
-	i.offset++
-	if i.offset == len(i.Items) {
-		i.offset = 0
-	}
-	return port, nil
-}
-
 func NewNativeResolver(_ context.Context) (Resolver, error) {
 	resolver := &NativeResolver{
-		mapping: new(ServiceMapping),
+		mapping: new(native.ServiceMapping),
 		log:     log.With(log.Any("resolve", "native")),
 	}
 
-	err := resolver.LoadMapping()
+	err := resolver.mapping.Load()
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +49,7 @@ func NewNativeResolver(_ context.Context) (Resolver, error) {
 				}
 
 				resolver.log.Debug("load ports mapping file again", log.Error(err))
-				err = resolver.LoadMapping()
+				err = resolver.mapping.Load()
 				if err != nil {
 					resolver.log.Warn("load ports mapping file failed", log.Error(err))
 				}
@@ -95,31 +63,13 @@ func NewNativeResolver(_ context.Context) (Resolver, error) {
 		}
 	}()
 
-	err = watcher.Add(serviceMappingFile)
+	err = watcher.Add(native.ServiceMappingFile)
 	if err != nil {
 		return nil, err
 	}
 
 	resolver.watcher = watcher
 	return resolver, nil
-}
-
-func (n *NativeResolver) LoadMapping() error {
-	n.Lock()
-	defer n.Unlock()
-
-	if !utils.FileExists(serviceMappingFile) {
-		return errors.Errorf("services mapping file (%s) doesn't exist", serviceMappingFile)
-	}
-	data, err := ioutil.ReadFile(serviceMappingFile)
-	if err != nil {
-		return err
-	}
-	err = yaml.Unmarshal(data, n.mapping)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (n *NativeResolver) Resolve(service string) (address string, err error) {
@@ -130,7 +80,7 @@ func (n *NativeResolver) Resolve(service string) (address string, err error) {
 	if !ok {
 		return "", errors.New("no such service in services mapping file")
 	}
-	if serviceInfo.Ports == nil || len(serviceInfo.Ports.Items) == 0{
+	if len(serviceInfo.Ports.Items) == 0{
 		return "", errors.New("no ports info in services mapping file")
 	}
 
