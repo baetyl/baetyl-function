@@ -12,10 +12,13 @@ VERSION:=$(if $(GIT_TAG),$(GIT_TAG),$(GIT_REV))
 GO_FLAGS:=-ldflags '-X "github.com/baetyl/baetyl-go/v2/utils.REVISION=$(GIT_REV)" -X "github.com/baetyl/baetyl-go/v2/utils.VERSION=$(VERSION)"'
 GO_TEST_FLAGS:=-race -short -covermode=atomic -coverprofile=coverage.txt
 GO_TEST_PKGS:=$(shell go list ./...)
+
+GO_OS:=$(shell go env GOOS)
+GO_ARCH:=$(shell go env GOARCH)
+GO_ARM:=$(shell go env GOARM)
+PROGRAM:=$(if $(GO_ARM),$(BIN)_$(GO_OS)-$(GO_ARCH)-v$(GO_ARM)_$(VERSION),$(BIN)_$(GO_OS)-$(GO_ARCH)_$(VERSION))
+
 ifndef PLATFORMS
-	GO_OS:=$(shell go env GOOS)
-	GO_ARCH:=$(shell go env GOARCH)
-	GO_ARM:=$(shell go env GOARM)
 	PLATFORMS:=$(if $(GO_ARM),$(GO_OS)/$(GO_ARCH)/$(GO_ARM),$(GO_OS)/$(GO_ARCH))
 	ifeq ($(GO_OS),darwin)
 		PLATFORMS+=linux/amd64
@@ -29,9 +32,12 @@ XFLAGS?=--load
 XPLATFORMS:=$(shell echo $(filter-out darwin/amd64,$(PLATFORMS)) | sed 's: :,:g')
 
 .PHONY: all
-all: $(SRC_FILES)
+all: build
+
+.PHONY: build
+build: $(SRC_FILES)
 	@echo "BUILD $(BIN)"
-	@env GO111MODULE=on GOPROXY=https://goproxy.cn CGO_ENABLED=0 go build -o $(BIN) $(GO_FLAGS) cmd/main.go
+	@env GO111MODULE=on GOPROXY=https://goproxy.baidu.com CGO_ENABLED=0 go build -o $(BIN) $(GO_FLAGS) cmd/main.go
 
 .PHONY: image
 image:
@@ -60,4 +66,8 @@ fmt:
 
 .PHONY: clean
 clean:
-	@rm -rf $(BIN)
+	@rm -r $(BIN)*
+
+.PHONY: package
+package: build
+	zip $(PROGRAM).zip program.yml $(BIN)

@@ -1,0 +1,5 @@
+FROM baetyltechtest/python:3.6-devel
+COPY *.py /bin/
+RUN pip3 install numpy opencv-python
+RUN cd /bin/ && chmod +x runtime.py
+ENTRYPOINT ["runtime.py"]
