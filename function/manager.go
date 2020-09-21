@@ -5,6 +5,7 @@ import (
 	"io"
 	"sync"
 
+	"github.com/baetyl/baetyl-go/v2/errors"
 	"github.com/baetyl/baetyl-go/v2/log"
 	"github.com/baetyl/baetyl-go/v2/utils"
 	"google.golang.org/grpc"
@@ -28,7 +29,7 @@ type manager struct {
 func NewManager(cert utils.Certificate) (Manager, error) {
 	tlsConfig, err := utils.NewTLSConfigClient(cert)
 	if err != nil {
-		return nil, err
+		return nil, errors.Trace(err)
 	}
 
 	return &manager{
@@ -58,7 +59,7 @@ func (g *manager) GetGRPCConnection(address string, recreateIfExists bool) (*grp
 	conn, err := grpc.Dial(address, opts...)
 	if err != nil {
 		g.log.Error("failed to create connection to server", log.Error(err), log.Any("address", address))
-		return nil, err
+		return nil, errors.Trace(err)
 	}
 
 	g.connectionPool[address] = conn

@@ -62,7 +62,8 @@ func TestServerNativeNormal(t *testing.T) {
 	}
 
 	ports, err := getFreePorts(3)
-	mapping := native.NewServiceMapping()
+	mapping, err := native.NewServiceMapping()
+	assert.NoError(t, err)
 	assert.NotNil(t, mapping)
 	defer os.RemoveAll(path.Join(cmd, "var"))
 

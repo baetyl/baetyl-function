@@ -35,7 +35,7 @@ func Test_FunctionInstance(t *testing.T) {
 		functionName string
 		codePath     string
 		confFile     string
-		address      string
+		port         string
 		runFile      string
 	}{
 		{
@@ -44,7 +44,7 @@ func Test_FunctionInstance(t *testing.T) {
 			functionName: "python3-sayhi",
 			codePath:     path.Join([]string{cmd, "..", "testdata", "python3", "code"}...),
 			confFile:     path.Join([]string{cmd, "..", "testdata", "python3", "config", "service.yml"}...),
-			address:      "127.0.0.1:51200",
+			port:         "51200",
 			runFile:      path.Join([]string{"..", "python36", "runtime.py"}...),
 		},
 		{
@@ -53,7 +53,7 @@ func Test_FunctionInstance(t *testing.T) {
 			functionName: "node10-sayhi",
 			codePath:     path.Join([]string{cmd, "..", "testdata", "node10", "code"}...),
 			confFile:     path.Join([]string{cmd, "..", "testdata", "node10", "config", "service.yml"}...),
-			address:      "127.0.0.1:51201",
+			port:         "51201",
 			runFile:      path.Join([]string{"..", "node10", "runtime.js"}...),
 		},
 	}
@@ -68,7 +68,8 @@ func Test_FunctionInstance(t *testing.T) {
 			env = append(env, fmt.Sprintf("%s=%s", "BAETYL_SERVICE_NAME", tt.functionName))
 			env = append(env, fmt.Sprintf("%s=%s", "BAETYL_CODE_PATH", tt.codePath))
 			env = append(env, fmt.Sprintf("%s=%s", "BAETYL_CONF_FILE", tt.confFile))
-			env = append(env, fmt.Sprintf("%s=%s", "BAETYL_SERVICE_ADDRESS", tt.address))
+			env = append(env, fmt.Sprintf("%s=%s", "BAETYL_SERVICE_DYNAMIC_PORT", tt.port))
+			env = append(env, fmt.Sprintf("%s=%s", "BAETYL_RUN_MODE", "native"))
 
 			p, err := os.StartProcess(
 				_exec,
@@ -84,7 +85,7 @@ func Test_FunctionInstance(t *testing.T) {
 			)
 			assert.NoError(t, err)
 
-			cli, err := newMockFcClient(tt.address, utils.Certificate{
+			cli, err := newMockFcClient("127.0.0.1:"+tt.port, utils.Certificate{
 				CA:   path.Join(certPath, "ca.pem"),
 				Key:  path.Join(certPath, "clientKey.pem"),
 				Cert: path.Join(certPath, "clientCrt.pem"),
