@@ -23,7 +23,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"gopkg.in/yaml.v2"
 
 	"github.com/baetyl/baetyl-function/v2/resolve"
 )
@@ -63,32 +62,15 @@ func TestServerNativeNormal(t *testing.T) {
 	}
 
 	ports, err := getFreePorts(3)
-
-	mapping := native.ServiceMapping{
-		Services: map[string]native.ServiceMappingInfo{
-			"serviceA": {
-				Ports: native.PortsInfo{
-					Items: ports[:1],
-				},
-			},
-			"serviceB": {
-				Ports: native.PortsInfo{
-					Items: ports[1:2],
-				},
-			},
-		},
-	}
-
-	data, err := yaml.Marshal(mapping)
-	assert.NoError(t, err)
-
-	portMappingFile := path.Join(cmd, native.ServiceMappingFile)
-	err = os.MkdirAll(path.Dir(portMappingFile), 0755)
-	assert.NoError(t, err)
-
-	err = ioutil.WriteFile(portMappingFile, data, 0755)
-	assert.NoError(t, err)
+	mapping := native.NewServiceMapping()
+	assert.NotNil(t, mapping)
 	defer os.RemoveAll(path.Join(cmd, "var"))
+
+	err = mapping.SetServicePorts("serviceA", ports[:1])
+	assert.NoError(t, err)
+
+	err = mapping.SetServicePorts("serviceB", ports[1:2])
+	assert.NoError(t, err)
 
 	s0 := mockGrpc(t, ports[0], serverCert)
 	defer s0.GracefulStop()
@@ -99,7 +81,7 @@ func TestServerNativeNormal(t *testing.T) {
 	s2 := mockGrpc(t, ports[2], serverCert)
 	defer s2.GracefulStop()
 
-	resolver, err := resolve.NewNativeResolver(ctx)
+	resolver, err := resolve.New("native", ctx)
 	assert.NotNil(t, resolver)
 	assert.NoError(t, err)
 
@@ -141,16 +123,7 @@ func TestServerNativeNormal(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, string(respData), fmt.Sprintf("{\"port\":%d}", ports[1]))
 
-	mapping.Services["serviceA"] = native.ServiceMappingInfo{
-		Ports: native.PortsInfo{
-			Items: ports[2:3],
-		},
-	}
-
-	data, err = yaml.Marshal(mapping)
-	assert.NoError(t, err)
-
-	err = ioutil.WriteFile(portMappingFile, data, 0755)
+	err = mapping.SetServicePorts("serviceA", ports[2:3])
 	assert.NoError(t, err)
 
 	time.Sleep(time.Microsecond * 500)
@@ -163,6 +136,8 @@ func TestServerNativeNormal(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, string(respData), fmt.Sprintf("{\"port\":%d}", ports[2]))
 
+	api.Close()
+	resolver.Close()
 	fmt.Println("-----> end <-----")
 }
 

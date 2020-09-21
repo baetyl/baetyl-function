@@ -125,7 +125,6 @@ class NodeRuntimeModule {
         this.name = 'baetyl-node10';
         this.confPath = '/etc/baetyl/conf.yml';
         this.codePath = '/var/lib/baetyl/code';
-        this.serverAddress = "0.0.0.0:80";
         this.cert = {
             'ca': 'var/lib/baetyl/system/certs/ca.pem',
             'key': 'var/lib/baetyl/system/certs/key.pem',
@@ -152,9 +151,19 @@ class NodeRuntimeModule {
             this.codePath = process.env['BAETYL_CODE_PATH']
         }
 
-        if (hasAttr(process.env, 'BAETYL_SERVICE_ADDRESS')) {
-            this.serverAddress = process.env['BAETYL_SERVICE_ADDRESS']
+        if (!hasAttr(process.env, 'BAETYL_RUN_MODE')) {
+            throw new Error("BAETYL_RUN_MODE env is not found");
         }
+
+        if (!hasAttr(process.env, 'BAETYL_SERVICE_DYNAMIC_PORT')) {
+            throw new Error("BAETYL_SERVICE_DYNAMIC_PORT env is not found");
+        }
+
+        let ip = '0.0.0.0'
+        if (process.env['BAETYL_CONF_FILE'] === 'native') {
+            ip = '127.0.0.1'
+        }
+        this.serverAddress = ip + ":" + process.env['BAETYL_SERVICE_DYNAMIC_PORT']
 
         this.config = {}
 
