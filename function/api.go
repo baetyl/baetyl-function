@@ -38,7 +38,7 @@ func NewAPI(cfg Config, ctx context2.Context, resolver resolve.Resolver) (*API, 
 	cert := ctx.SystemConfig().Certificate
 	m, err := NewManager(cert)
 	if err != nil {
-		return nil, err
+		return nil, errors.Trace(err)
 	}
 
 	api := &API{

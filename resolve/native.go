@@ -2,7 +2,6 @@ package resolve
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/baetyl/baetyl-go/v2/context"
 	"github.com/baetyl/baetyl-go/v2/errors"
@@ -17,13 +16,16 @@ func init() {
 type nativeResolver struct {
 	mapping *native.ServiceMapping
 	log     *log.Logger
-	sync.RWMutex
 }
 
 func newNativeResolver(_ context.Context) (Resolver, error) {
 	logger := log.With(log.Any("resolve", "native"))
-	mapping := native.NewServiceMapping()
-	err := mapping.WatchFile(logger)
+	mapping, err := native.NewServiceMapping()
+	if err != nil {
+		return nil, errors.Trace(err)
+	}
+
+	err = mapping.WatchFile(logger)
 	if err != nil {
 		return nil, err
 	}
@@ -35,9 +37,6 @@ func newNativeResolver(_ context.Context) (Resolver, error) {
 }
 
 func (n *nativeResolver) Resolve(service string) (address string, err error) {
-	n.Lock()
-	defer n.Unlock()
-
 	port, err := n.mapping.GetServiceNextPort(service)
 	if err != nil {
 		return "", errors.Trace(err)
