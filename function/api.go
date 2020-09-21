@@ -134,10 +134,10 @@ func (a *API) onFunctionMessage(c *routing.Context) error {
 
 	for i := 0; i < a.cfg.Client.Grpc.Retries; i++ {
 		ctx, cancel := context.WithTimeout(context.Background(), a.cfg.Client.Grpc.Timeout)
-		defer cancel()
 
 		client := baetyl.NewFunctionClient(conn)
 		resp, err := client.Call(ctx, &message)
+		cancel()
 		if err == nil {
 			a.log.Debug("call function successfully", log.Any("service", serviceName), log.Any("function", functionName))
 			respond(c, http.StatusOK, resp.Payload)

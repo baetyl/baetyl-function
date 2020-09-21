@@ -17,28 +17,18 @@ func main() {
 		var cfg function.Config
 		err := ctx.LoadCustomConfig(&cfg)
 		if err != nil {
-			return err
+			return errors.Trace(err)
 		}
 
-		var resolver resolve.Resolver
-		switch context.RunMode() {
-		case context.RunModeKube:
-			resolver, err = resolve.NewKubeResolver(ctx)
-			if err != nil {
-				return err
-			}
-		case context.RunModeNative:
-			resolver, err = resolve.NewNativeResolver(ctx)
-			if err != nil {
-				return err
-			}
-		default:
-			return errors.Errorf("Run mode (%s) is not supported.", context.RunMode())
+		resolver, err := resolve.New(context.RunMode(), ctx)
+		if err != nil {
+			return errors.Trace(err)
 		}
+		defer resolver.Close()
 
 		api, err := function.NewAPI(cfg, ctx, resolver)
 		if err != nil {
-			return err
+			return errors.Trace(err)
 		}
 		defer api.Close()
 		ctx.Wait()
