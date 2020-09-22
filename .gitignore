@@ -15,9 +15,10 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-baetyl-function*
 var/**
 /**/var
 coverage.txt
 coverage.out
 coverage.html
+/baetyl*
+/output*
