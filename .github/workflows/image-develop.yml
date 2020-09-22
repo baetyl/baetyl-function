@@ -27,7 +27,7 @@ jobs:
           docker login -u ${{ secrets.DOCKER_REGISTRY_ID }} -p ${{ secrets.DOCKER_REGISTRY_PASS }}
       - name: build and publish baetyl-function image
         run: |
-          make image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/main' REGISTRY=baetyltechtest/
+          make image PLATFORMS=all XFLAGS='--push' REGISTRY=baetyltechtest/
 
   python-image:
     name: docker build images of python
@@ -51,7 +51,7 @@ jobs:
           docker login -u ${{ secrets.DOCKER_REGISTRY_ID }} -p ${{ secrets.DOCKER_REGISTRY_PASS }}
       - name: build and publish python image
         run: |
-          make python-image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/python' REGISTRY=baetyltechtest/
+          make python-image PLATFORMS=all XFLAGS='--push' REGISTRY=baetyltechtest/
 
   node-image:
       name: docker build images of node
@@ -75,4 +75,24 @@ jobs:
             docker login -u ${{ secrets.DOCKER_REGISTRY_ID }} -p ${{ secrets.DOCKER_REGISTRY_PASS }}
         - name: build and publish node image
           run: |
-            make node-image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/node' REGISTRY=baetyltechtest/
+            make node-image PLATFORMS=all XFLAGS='--push' REGISTRY=baetyltechtest/
+
+  function-package:
+    name: package function for native mode
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Build
+        run: make package
+      - name: Run unittest
+        run: make test
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.txt
