@@ -77,8 +77,8 @@ jobs:
           run: |
             make node-image PLATFORMS=all XFLAGS='--push' REGISTRY=baetyltechtest/
 
-  function-package:
-    name: package function for native mode
+  package:
+    name: packages for native mode
     runs-on: ubuntu-latest
     steps:
       - name: Setup Go
@@ -87,12 +87,24 @@ jobs:
           go-version: 1.13
       - name: Checkout code
         uses: actions/checkout@v1
-      - name: Build
-        run: make package
-      - name: Run unittest
-        run: make test
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+      - id: version
+        run: |
+          echo ::set-output name=version::git-$(git rev-parse --short HEAD)
+      - name: build
+        run: make build PLATFORMS=all
+      - uses: actions/upload-artifact@v2
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.txt
+          name: baetyl-function_darwin-amd64_${{ steps.version.outputs.version }}
+          path: output/darwin/amd64/baetyl-function/*
+      - uses: actions/upload-artifact@v2
+        with:
+          name: baetyl-function_linux-amd64_${{ steps.version.outputs.version }}
+          path: output/linux/amd64/baetyl-function/*
+      - uses: actions/upload-artifact@v2
+        with:
+          name: baetyl-function_linux-arm-v7_${{ steps.version.outputs.version }}
+          path: output/linux/arm/v7/baetyl-function/*
+      - uses: actions/upload-artifact@v2
+        with:
+          name: baetyl-function_linux-arm64_${{ steps.version.outputs.version }}
+          path: output/linux/arm64/baetyl-function/*

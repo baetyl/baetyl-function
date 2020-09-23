@@ -15,13 +15,9 @@ endif
 GO_OS:=$(shell go env GOOS)
 GO_ARCH:=$(shell go env GOARCH)
 GO_ARM:=$(shell go env GOARM)
-PROGRAM:=$(if $(GO_ARM),$(MODULE)_$(GO_OS)-$(GO_ARCH)-v$(GO_ARM)_$(VERSION),$(MODULE)_$(GO_OS)-$(GO_ARCH)_$(VERSION))
 
 ifndef PLATFORMS
 	PLATFORMS:=$(if $(GO_ARM),$(GO_OS)/$(GO_ARCH)/$(GO_ARM),$(GO_OS)/$(GO_ARCH))
-	ifeq ($(GO_OS),darwin)
-		PLATFORMS+=linux/amd64
-	endif
 else ifeq ($(PLATFORMS),all)
 	override PLATFORMS:=$(PLATFORM_ALL)
 endif
@@ -44,13 +40,14 @@ REGISTRY:=
 XFLAGS:=--load
 XPLATFORMS:=$(shell echo $(filter-out darwin/amd64,$(PLATFORMS)) | sed 's: :,:g')
 
-OUTPUT:=output
-OUTPUT_DIRS:=$(PLATFORMS:%=$(OUTPUT)/%/baetyl)
+OUTPUT     :=output
+OUTPUT_DIRS:=$(PLATFORMS:%=$(OUTPUT)/%/$(BIN))
 OUTPUT_BINS:=$(OUTPUT_DIRS:%=%/$(BIN))
-OUTPUT_PKGS:=$(OUTPUT_DIRS:%=%/$(BIN)-$(VERSION).zip)
+PKG_PLATFORMS := $(shell echo $(PLATFORMS) | sed 's:/:-:g')
+OUTPUT_PKGS:=$(PKG_PLATFORMS:%=$(OUTPUT)/$(BIN)_%_$(VERSION).zip)
 
 .PHONY: all
-all: build
+all: build test
 
 .PHONY: build
 build: $(OUTPUT_BINS)
@@ -58,7 +55,8 @@ build: $(OUTPUT_BINS)
 $(OUTPUT_BINS): $(SRC_FILES)
 	@echo "BUILD $@"
 	@mkdir -p $(dir $@)
-	@$(shell echo $(@:$(OUTPUT)/%/baetyl/$(BIN)=%)  | sed 's:/v:/:g' | awk -F '/' '{print "GOOS="$$1" GOARCH="$$2" GOARM="$$3""}') $(GO_BUILD) -o $@ cmd/main.go
+	@cp program.yml $(dir $@)
+	@$(shell echo $(@:$(OUTPUT)/%/$(BIN)/$(BIN)=%)  | sed 's:/v:/:g' | awk -F '/' '{print "GOOS="$$1" GOARCH="$$2" GOARM="$$3""}') $(GO_BUILD) -o $@ cmd/main.go
 
 .PHONY: image
 image:
@@ -82,12 +80,12 @@ fmt:
 clean:
 	@rm -rf $(OUTPUT)
 
+.PHONY: package
+package: build $(OUTPUT_PKGS)
+
 $(OUTPUT_PKGS):
 	@echo "PACKAGE $@"
-	@cp program.yml $(dir $@) && cd $(dir $@) && zip -q -r $(notdir $@) baetyl program.yml
-
-.PHONY: package
-package: $(OUTPUT_BINS) $(OUTPUT_PKGS)
+	@cd $(OUTPUT)/$(shell echo $(@:$(OUTPUT)/$(BIN)_%_$(VERSION).zip=%) | sed 's:-:/:g')/$(BIN) && zip -q -r $(notdir $@) $(BIN) program.yml
 
 .PHONY: python-image
 python-image:
