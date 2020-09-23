@@ -3,5 +3,6 @@ COPY / /go/src/
 RUN cd /go/src/ && make all
 
 FROM --platform=$TARGETPLATFORM busybox
-COPY --from=devel /go/src/baetyl-function /bin/
+ARG TARGETPLATFORM
+COPY --from=devel /go/src/output/$TARGETPLATFORM/baetyl-function/baetyl-function /bin/
 ENTRYPOINT ["baetyl-function"]
