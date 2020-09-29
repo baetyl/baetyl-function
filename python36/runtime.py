@@ -31,6 +31,7 @@ class mo(function_pb2_grpc.FunctionServicer):
         self.name = 'baetyl-python36'
         self.conf_path = '/etc/baetyl/conf.yml'
         self.code_path = '/var/lib/baetyl/code'
+        self.server_address = "0.0.0.0:80"
         self.cert = {
             'ca': 'var/lib/baetyl/system/certs/ca.pem',
             'key': 'var/lib/baetyl/system/certs/key.pem',
@@ -61,11 +62,8 @@ class mo(function_pb2_grpc.FunctionServicer):
         if 'BAETYL_SERVICE_DYNAMIC_PORT' not in os.environ:
             raise Exception("BAETYL_SERVICE_DYNAMIC_PORT env is not found")
 
-        ip = '0.0.0.0'
         if os.environ['BAETYL_RUN_MODE'] == 'native':
-            ip = '127.0.0.1'
-
-        self.server_address = ip + ":" + os.environ['BAETYL_SERVICE_DYNAMIC_PORT']
+            self.server_address = "127.0.0.1:" + os.environ['BAETYL_SERVICE_DYNAMIC_PORT']
 
         self.config = {}
 
