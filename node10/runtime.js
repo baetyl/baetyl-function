@@ -156,10 +156,6 @@ class NodeRuntimeModule {
             throw new Error("BAETYL_RUN_MODE env is not found");
         }
 
-        if (!hasAttr(process.env, 'BAETYL_SERVICE_DYNAMIC_PORT')) {
-            throw new Error("BAETYL_SERVICE_DYNAMIC_PORT env is not found");
-        }
-
         if (process.env['BAETYL_RUN_MODE'] === 'native') {
             this.serverAddress = "127.0.0.1:" + process.env['BAETYL_SERVICE_DYNAMIC_PORT']
         }
