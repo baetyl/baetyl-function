@@ -59,9 +59,6 @@ class mo(function_pb2_grpc.FunctionServicer):
         if 'BAETYL_RUN_MODE' not in os.environ:
             raise Exception("BAETYL_RUN_MODE env is not found")
 
-        if 'BAETYL_SERVICE_DYNAMIC_PORT' not in os.environ:
-            raise Exception("BAETYL_SERVICE_DYNAMIC_PORT env is not found")
-
         if os.environ['BAETYL_RUN_MODE'] == 'native':
             self.server_address = "127.0.0.1:" + os.environ['BAETYL_SERVICE_DYNAMIC_PORT']
 
