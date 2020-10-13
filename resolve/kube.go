@@ -19,7 +19,7 @@ func newKubeResolver(ctx context.Context) (Resolver, error) {
 }
 
 func (k *kubeResolver) Resolve(service string) (address string, err error) {
-	return fmt.Sprintf("%s.%s", service, k.ctx.EdgeNamespace()), nil
+	return fmt.Sprintf("%s.%s:80", service, k.ctx.EdgeNamespace()), nil
 }
 
 func (k *kubeResolver) Close() error {
