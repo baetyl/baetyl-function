@@ -30,11 +30,11 @@ OUTPUT_PKGS:=$(PLATFORMS:%=$(OUTPUT)/%/baetyl/$(BIN)-$(VERSION).zip)
 
 .PHONY: image
 image:
-	@echo "BUILDX: $(REGISTRY)$(MODULE):10.19-$(VERSION)"
+	@echo "BUILDX: $(REGISTRY)$(MODULE):10.23-$(VERSION)"
 	@-docker buildx create --name baetyl
 	@docker buildx use baetyl
 	@docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-	docker buildx build $(XFLAGS) --platform $(XPLATFORMS) -t $(REGISTRY)$(MODULE):10.19-$(VERSION) .
+	docker buildx build $(XFLAGS) --platform $(XPLATFORMS) -t $(REGISTRY)$(MODULE):10.23-$(VERSION) .
 
 $(OUTPUT_PKGS): $(SRC_FILES)
 	@echo "PACKAGE $@"
