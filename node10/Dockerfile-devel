@@ -1,4 +1,4 @@
-FROM --platform=$TARGETPLATFORM node:10.19-buster-slim
+FROM --platform=$TARGETPLATFORM node:10.23-buster-slim
 COPY *.json /bin/
 RUN cd /bin/ && npm install
 CMD ["/bin/bash"]
