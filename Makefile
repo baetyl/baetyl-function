@@ -98,16 +98,16 @@ $(OUTPUT_PKGS):
 
 .PHONY: python-image
 python-image:
-	make -C python36 image
+	make -C python3 image
 
 .PHONY: node-image
 node-image:
-	make -C node10 image
+	make -C nodejs10 image
 
 .PHONY: python-package
 python-package:
-	make -C python36 package
+	make -C python3 package
 
 .PHONY: node-package
 node-package:
-	make -C node10 package
+	make -C nodejs10 package
