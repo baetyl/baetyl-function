@@ -1,7 +1,7 @@
 MODULE:=nodejs10
 BIN:=baetyl-$(MODULE)
 SRC_FILES:=function_grpc_pb.js function_pb.js runtime.js
-PLATFORM_ALL:=linux/amd64 linux/arm64 linux/arm/v7
+PLATFORM_ALL:=darwin/amd64 linux/amd64 linux/arm64 linux/arm/v7
 
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
@@ -46,7 +46,8 @@ build: $(OUTPUT_BINS)
 $(OUTPUT_BINS): $(SRC_FILES)
 	@echo "BUILD $@"
 	@mkdir -p $(dir $@)
-	@cp $^ program.yml $(dir $@)
+	@rm -rf temp && mkdir temp && unzip lib/$(shell echo $(@:$(OUTPUT)/%/$(BIN)/$(BIN)=%) | sed 's:/:-:g').zip -d temp
+	@cp -r temp/* $^ program.yml $(dir $@) && rm -rf temp
 
 .PHONY: package
 package: build $(OUTPUT_PKGS)

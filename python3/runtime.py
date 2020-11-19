@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.6
 # -*- coding:utf-8 -*-
 """
-python3 runtime
+python3.6 runtime
 """
 
 import importlib
@@ -29,8 +29,8 @@ class mo(function_pb2_grpc.FunctionServicer):
 
     def __init__(self):
         self.name = 'baetyl-python36'
-        self.conf_path = '/etc/baetyl/conf.yml'
-        self.code_path = '/var/lib/baetyl/code'
+        self.conf_path = 'etc/baetyl/conf.yml'
+        self.code_path = 'var/lib/baetyl/code'
         self.server_address = "0.0.0.0:80"
         self.cert = {
             'ca': 'var/lib/baetyl/system/certs/ca.pem',
