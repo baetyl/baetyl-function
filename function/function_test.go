@@ -40,7 +40,7 @@ func Test_FunctionInstance(t *testing.T) {
 	}{
 		{
 			name:         "test python3 runtime",
-			_exec:        "python3",
+			_exec:        "python3.6",
 			functionName: "python3-sayhi",
 			codePath:     path.Join([]string{cmd, "..", "testdata", "python3", "code"}...),
 			confFile:     path.Join([]string{cmd, "..", "testdata", "python3", "config", "service.yml"}...),
@@ -51,7 +51,7 @@ func Test_FunctionInstance(t *testing.T) {
 			name:         "test node10 runtime",
 			_exec:        "node",
 			functionName: "node10-sayhi",
-			codePath:     path.Join([]string{cmd, "..", "testdata", "nodejs10", "code"}...),
+			codePath:     path.Join([]string{"..", "testdata", "nodejs10", "code"}...),
 			confFile:     path.Join([]string{cmd, "..", "testdata", "nodejs10", "config", "service.yml"}...),
 			port:         "51201",
 			runFile:      path.Join([]string{"..", "nodejs10", "runtime.js"}...),

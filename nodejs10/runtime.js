@@ -64,6 +64,7 @@ const getFunctions = s => {
         return functionsHandle;
     }
 
+    let cwd = process.cwd();
     s.config.functions.forEach(function (ele) {
         if (!ele.name || !ele.handler) {
             throw new Error('config invalid, missing function name, handler');
@@ -72,7 +73,7 @@ const getFunctions = s => {
         let codedir = !ele.codedir ? '' : ele.codedir;
         const moduleHandler = ele.handler.split('.');
         const handlerName = moduleHandler[1];
-        const moduleName = require(path.join(s.codePath, path.join("/", codedir), moduleHandler[0]));
+        const moduleName = require(path.join(cwd, s.codePath, path.join("/", codedir), moduleHandler[0]));
         functionsHandle[ele.name] = moduleName[handlerName];
     });
     return functionsHandle;
@@ -123,8 +124,8 @@ const getGrpcServer = s => {
 class NodeRuntimeModule {
     constructor() {
         this.name = 'baetyl-node10';
-        this.confPath = '/etc/baetyl/conf.yml';
-        this.codePath = '/var/lib/baetyl/code';
+        this.confPath = 'etc/baetyl/conf.yml';
+        this.codePath = 'var/lib/baetyl/code';
         this.serverAddress = "0.0.0.0:80";
         this.cert = {
             'ca': 'var/lib/baetyl/system/certs/ca.pem',
