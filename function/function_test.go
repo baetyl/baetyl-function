@@ -51,10 +51,10 @@ func Test_FunctionInstance(t *testing.T) {
 			name:         "test node10 runtime",
 			_exec:        "node",
 			functionName: "node10-sayhi",
-			codePath:     path.Join([]string{"..", "testdata", "nodejs10", "code"}...),
-			confFile:     path.Join([]string{cmd, "..", "testdata", "nodejs10", "config", "service.yml"}...),
+			codePath:     path.Join([]string{"..", "testdata", "node", "code"}...),
+			confFile:     path.Join([]string{cmd, "..", "testdata", "node", "config", "service.yml"}...),
 			port:         "51201",
-			runFile:      path.Join([]string{"..", "nodejs10", "runtime.js"}...),
+			runFile:      path.Join([]string{"..", "node", "runtime.js"}...),
 		},
 	}
 	for _, tt := range tests {

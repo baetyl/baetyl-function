@@ -1,4 +1,4 @@
-MODULE:=nodejs10
+MODULE:=node
 BIN:=baetyl-$(MODULE)
 SRC_FILES:=function_grpc_pb.js function_pb.js runtime.js
 PLATFORM_ALL:=darwin/amd64 linux/amd64 linux/arm64 linux/arm/v7
