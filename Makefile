@@ -102,7 +102,7 @@ python-image:
 
 .PHONY: node-image
 node-image:
-	make -C nodejs10 image
+	make -C node image
 
 .PHONY: python-package
 python-package:
@@ -110,4 +110,4 @@ python-package:
 
 .PHONY: node-package
 node-package:
-	make -C nodejs10 package
+	make -C node package
