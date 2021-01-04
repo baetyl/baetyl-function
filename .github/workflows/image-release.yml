@@ -52,6 +52,7 @@ jobs:
       - name: build and publish python image
         run: |
           make python-image PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/python' REGISTRY=baetyltech/
+          make python-image-opencv PLATFORMS=all XFLAGS='--push --cache-to=type=local,dest=/tmp/python' REGISTRY=baetyltech/
 
   node-image:
     name: docker build images of node

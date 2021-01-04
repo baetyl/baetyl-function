@@ -100,6 +100,10 @@ $(OUTPUT_PKGS):
 python-image:
 	make -C python3 image
 
+.PHONY: python-image-opencv
+python-image-opencv:
+	make -C python3 image-opencv
+
 .PHONY: node-image
 node-image:
 	make -C node image

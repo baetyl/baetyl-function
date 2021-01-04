@@ -1,5 +1,4 @@
-FROM baetyltechtest/python:3.6-devel
+FROM --platform=$TARGETPLATFORM hub.baidubce.com/baetyl/baetyl-function-python36:0.1.6-opencv41
 COPY *.py /bin/
-RUN pip3 install numpy opencv-python
 RUN cd /bin/ && chmod +x runtime.py
 ENTRYPOINT ["runtime.py"]
