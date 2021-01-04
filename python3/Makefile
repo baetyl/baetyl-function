@@ -40,6 +40,14 @@ image:
 	@docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 	docker buildx build $(XFLAGS) --platform $(XPLATFORMS) -t $(REGISTRY)$(MODULE):3.6-$(VERSION) .
 
+.PHONY: image-opencv
+image-opencv:
+	@echo "BUILDX: $(REGISTRY)$(MODULE)-opencv:3.6-$(VERSION)"
+	@-docker buildx create --name baetyl
+	@docker buildx use baetyl
+	@docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+	docker buildx build $(XFLAGS) --platform $(XPLATFORMS) -t $(REGISTRY)$(MODULE)-opencv:3.6-$(VERSION) -f Dockerfile-opencv .
+
 .PHONY: build
 build: $(OUTPUT_BINS)
 
