@@ -50,7 +50,7 @@ func NewAPI(cfg Config, ctx context2.Context, resolver resolve.Resolver) (*API, 
 	api.endpoints = append(api.endpoints, api.proxyEndpoints()...)
 
 	handler := api.useRouter()
-	cfg.Server.Address = ":" + ctx.FunctionHttpPort()
+	cfg.Server.Address = ":" + context2.FunctionHttpPort()
 	cfg.Server.Certificate = cert
 	api.svr = baetylhttp.NewServer(cfg.Server, handler)
 	api.svr.Start()
