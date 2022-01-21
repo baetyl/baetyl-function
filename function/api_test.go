@@ -200,6 +200,10 @@ type mockContext struct {
 	port string
 }
 
+func (m *mockContext) NewSystemBrokerClient(topics []mqtt.QOSTopic) (*mqtt.Client, error) {
+	return nil, nil
+}
+
 func (m *mockContext) NodeName() string {
 	return ""
 }
