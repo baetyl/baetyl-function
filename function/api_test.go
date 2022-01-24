@@ -104,11 +104,11 @@ func TestServerNativeNormal(t *testing.T) {
 	ops.TLSConfig = tlsConfig
 	client := http.NewClient(ops)
 
-	resp, err := client.PostURL("https://localhost:50050", bytes.NewBuffer([]byte("payload")))
+	resp, err := client.PostURL("https://localhost:50011", bytes.NewBuffer([]byte("payload")))
 	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, 404)
 
-	resp, err = client.PostURL("https://localhost:50050/serviceA", bytes.NewBuffer([]byte("payload")))
+	resp, err = client.PostURL("https://localhost:50011/serviceA", bytes.NewBuffer([]byte("payload")))
 	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, 200)
 
@@ -116,7 +116,7 @@ func TestServerNativeNormal(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, string(respData), fmt.Sprintf("{\"port\":%d}", ports[0]))
 
-	resp, err = client.PostURL("https://localhost:50050/serviceB", bytes.NewBuffer([]byte("payload")))
+	resp, err = client.PostURL("https://localhost:50011/serviceB", bytes.NewBuffer([]byte("payload")))
 	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, 200)
 
@@ -129,7 +129,7 @@ func TestServerNativeNormal(t *testing.T) {
 
 	time.Sleep(time.Microsecond * 500)
 
-	resp, err = client.PostURL("https://localhost:50050/serviceA", bytes.NewBuffer([]byte("payload")))
+	resp, err = client.PostURL("https://localhost:50011/serviceA", bytes.NewBuffer([]byte("payload")))
 	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, 200)
 
