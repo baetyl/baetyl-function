@@ -95,7 +95,7 @@ func Test_FunctionInstance(t *testing.T) {
 
 			// round 1: test json payload
 			msgID := uint64(1234)
-			msgTimestamp := string(time.Now().Unix())
+			msgTimestamp := fmt.Sprint(time.Now().Unix())
 			invokeId := uuid.Generate().String()
 			payload := []byte(`{"name":"baetyl"}`)
 			msg := &baetyl.Message{
@@ -260,7 +260,7 @@ func Test_FunctionInstance(t *testing.T) {
 			assert.NoError(t, err6)
 
 			msgID7 := uint64(1234)
-			msgTimestamp7 := string(time.Now().Unix())
+			msgTimestamp7 := fmt.Sprint(time.Now().Unix())
 			invokeId7 := uuid.Generate().String()
 			payload7 := []byte(`{"name":"baetyl"}`)
 			msg7 := &baetyl.Message{
