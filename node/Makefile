@@ -1,7 +1,7 @@
 MODULE:=node
 BIN:=baetyl-$(MODULE)
 SRC_FILES:=function_grpc_pb.js function_pb.js runtime.js
-PLATFORM_ALL:=darwin/amd64 linux/amd64 linux/arm64 linux/arm/v7
+PLATFORM_ALL:=darwin/amd64 linux/amd64 linux/arm64 linux/arm/v7 windows/amd64
 
 export DOCKER_CLI_EXPERIMENTAL=enabled
 
