@@ -1,4 +1,5 @@
 MODULE:=python3
+PYTHON_VERSION?=3.7
 BIN:=baetyl-$(MODULE)
 SRC_FILES:=$(shell find . -type f -name '*.py')
 PLATFORM_ALL:=darwin/amd64 linux/amd64 linux/arm64 linux/arm/v7 windows/amd64
@@ -34,19 +35,27 @@ OUTPUT_PKGS:=$(PKG_PLATFORMS:%=$(OUTPUT)/$(BIN)_%_$(VERSION).zip)
 
 .PHONY: image
 image:
-	@echo "BUILDX: $(REGISTRY)$(MODULE):3.6-$(VERSION)"
+	@echo "BUILDX: $(REGISTRY)$(MODULE):$(PYTHON_VERSION)-$(VERSION)"
 	@-docker buildx create --name baetyl
 	@docker buildx use baetyl
-	@docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-	docker buildx build $(XFLAGS) --platform $(XPLATFORMS) -t $(REGISTRY)$(MODULE):3.6-$(VERSION) .
+	@docker run --privileged --rm tonistiigi/binfmt --install all
+	docker buildx build $(XFLAGS) --platform $(XPLATFORMS) -t $(REGISTRY)$(MODULE):$(PYTHON_VERSION)-$(VERSION) .
+
+.PHONY: image-devel
+image-devel:
+	@echo "BUILDX: $(REGISTRY)python:$(PYTHON_VERSION)-devel"
+	@-docker buildx create --name baetyl
+	@docker buildx use baetyl
+	@docker run --privileged --rm tonistiigi/binfmt --install all
+	docker buildx build $(XFLAGS) --platform $(XPLATFORMS) --build-arg PYTHON_VERSION=$(PYTHON_VERSION) -t $(REGISTRY)python:$(PYTHON_VERSION)-devel . -f Dockerfile-devel
 
 .PHONY: image-opencv
 image-opencv:
-	@echo "BUILDX: $(REGISTRY)$(MODULE)-opencv:3.6-$(VERSION)"
+	@echo "BUILDX: $(REGISTRY)$(MODULE)-opencv:$(PYTHON_VERSION)-$(VERSION)"
 	@-docker buildx create --name baetyl
 	@docker buildx use baetyl
-	@docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-	docker buildx build $(XFLAGS) --platform $(XPLATFORMS) -t $(REGISTRY)$(MODULE)-opencv:3.6-$(VERSION) -f Dockerfile-opencv .
+	@docker run --privileged --rm tonistiigi/binfmt --install all
+	docker buildx build $(XFLAGS) --platform $(XPLATFORMS) --build-arg PYTHON_VERSION=$(PYTHON_VERSION) -t $(REGISTRY)$(MODULE)-opencv:$(PYTHON_VERSION)-$(VERSION) -f Dockerfile-opencv .
 
 .PHONY: build
 build: $(OUTPUT_BINS)
