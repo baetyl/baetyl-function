@@ -37,7 +37,7 @@ image:
 	@echo "BUILDX: $(REGISTRY)$(MODULE):3.6-$(VERSION)"
 	@-docker buildx create --name baetyl
 	@docker buildx use baetyl
-	@docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+	@docker run --privileged --rm tonistiigi/binfmt --install all
 	docker buildx build $(XFLAGS) --platform $(XPLATFORMS) -t $(REGISTRY)$(MODULE):3.6-$(VERSION) .
 
 .PHONY: build

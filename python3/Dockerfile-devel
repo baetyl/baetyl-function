@@ -1,4 +1,5 @@
-FROM --platform=$TARGETPLATFORM python:3.6.10-slim-buster
+ARG PYTHON_VERSION=3.7
+FROM --platform=$TARGETPLATFORM python:${PYTHON_VERSION}-slim-bullseye
 COPY *.txt /bin/
 RUN cd /bin/ && pip install -r requirements.txt
 ENTRYPOINT ["runtime.py"]
